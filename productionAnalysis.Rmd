@@ -16,7 +16,6 @@ head(rcds)
 
 ```{r}
 prod <- read.table(text = as.character(rcds$filename), sep = "_")
-prod <- prod %>% filter(V2 != 0)
 head(prod)
 ```
 ### removing the ".wav" from the final column
@@ -31,14 +30,16 @@ head(prod)
 
 ### renaming the column names accordingly
 ```{r}
-cols <- prod %>% 
-  select(-V1) %>% 
-  rename(subj = V2,
-         word = V3,
-         block = V4,
-         seq = V5)
+library(dplyr)
+newcols <- prod %>% 
+  select(-V1)
+colnames(newcols)
 
-cols
+ 
+nc<- newcols %>% 
+  rename("subj" = "V2")
+
+head(nc)
 ```
 
 the naming convention was wrong in the posttest recordings
