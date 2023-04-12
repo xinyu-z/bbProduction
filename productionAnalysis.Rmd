@@ -21,6 +21,7 @@ head(prod)
 ### removing the ".wav" from the final column
 ```{r}
 library(stringr)
+library(dplyr)
 prod <- prod %>% 
   mutate(V5 =
     str_sub(prod$V5, end=-5)
@@ -30,14 +31,16 @@ head(prod)
 
 ### renaming the column names accordingly
 ```{r}
-library(dplyr)
 newcols <- prod %>% 
   select(-V1)
 colnames(newcols)
 
  
 nc<- newcols %>% 
-  rename("subj" = "V2")
+  rename("subj" = "V2",
+         "word" = "V3",
+         "block" = "V4",
+         "seq" = "V5")
 
 head(nc)
 ```
@@ -49,11 +52,11 @@ Such that the order was not condition_sequenceNr but sequenceNr_condition. Fixin
 ### separating the posttest recordings and non-posttest recordings
 ```{r}
 library(dplyr)
-p <- cols %>%
+p <- nc %>%
   filter(seq == "Post")
 nrow(p)
 
-np <- cols %>% 
+np <- nc %>% 
   filter(seq != "Post")
 nrow(np)
   
@@ -66,13 +69,13 @@ post <- p %>% rename(seq = block,
              block = seq)
 head(post)
 
-posttest <- post %>% relocate(seq, .after = block)
-head(posttest)
+wposttest <- post %>% relocate(seq, .after = block)
+head(wposttest)
 ```
 
 ### row-binding the posttest subset and the non-posttest subset
 ```{r}
-all <- rbind(np, posttest)
+all <- rbind(np, wposttest)
 nrow(all)
 ```
 
@@ -95,5 +98,11 @@ alldata %>%
 ### sequence number should be numeric
 ```{r}
 alldata$seq <- as.numeric(alldata$seq)
+```
+
+### previewing the current structure
+```{r}
+head(alldata)
+write.csv(alldata,'recordingInfo.csv', row.names=FALSE)
 ```
 
