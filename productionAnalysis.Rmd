@@ -7,35 +7,61 @@ output: html_document
 
 ### read in the list of file names and add a header
 ```{r}
-rcds<- read.csv("fileList.csv", header = FALSE)
-colnames(rcds) <- c("filename")
-head(rcds)
+library(dplyr)
+fi<- read.csv("allFemaleI.csv", header = TRUE, sep = "\t")
+fig<- fi |> mutate(gender = c(rep("F", times = nrow(fi))))
+  
+fe <- read.csv("allFemaleE.csv", header = TRUE, sep = "\t")
+feg<- fe |> mutate(gender = c(rep("F", times = nrow(fe))))
+
+mi<- read.csv("allMaleI.csv", header = TRUE, sep = "\t")
+  mig<- mi |> mutate(gender = c(rep("M", times = nrow(mi))))
+
+me <- read.csv("allMaleE.csv", header = TRUE, sep = "\t")
+meg<- me |> mutate(gender = c(rep("M", times = nrow(me))))
+
+mfie<- rbind(fig, feg, mig, meg)
+
+#extract the fileName column
+#fileNames<- rcds |> select(fileName)
+#head(fileNames)
 ```
 
 ### splitting the different segments in the file name into columns because they provide info about the recording
 
 ```{r}
-prod <- read.table(text = as.character(rcds$filename), sep = "_")
+prod <- read.table(text = as.character(mfie$fileName), sep = "_")
 head(prod)
 ```
 ### removing the ".wav" from the final column
-```{r}
-library(stringr)
-library(dplyr)
-prod <- prod %>% 
-  mutate(V5 =
-    str_sub(prod$V5, end=-5)
-  )
-head(prod)
-```
+#```{r}
+#library(stringr)
+#library(dplyr)
+#prod <- prod %>% 
+#  mutate(V5 =
+#   str_sub(prod$V5, end=-5)
+#  )
+#head(prod)
+#```
 
 ### renaming the column names accordingly
 ```{r}
+#removing column 1 because it's just "subj"
 newcols <- prod %>% 
   select(-V1)
 colnames(newcols)
 
- 
+#revert the "Post" and the "seq" for posttest items 
+#if v5 = post, v5 = v4, v4 = v5 (look up how to exchange)
+correctPost <- newcols |> 
+  mutate(V51 = ifelse(V5 == "Post", V4, V5),
+         V4 = ifelse(V5 == "Post", V5, V4)) |> 
+  select(-V5) |> 
+  rename("V5" = "V51")
+
+head(correctPost)
+
+#rename new columns accordingly
 nc<- newcols %>% 
   rename("subj" = "V2",
          "word" = "V3",
@@ -43,48 +69,17 @@ nc<- newcols %>%
          "seq" = "V5")
 
 head(nc)
+
+
+allcol<- as.data.frame(cbind(mfie$fileName, nc))|> rename("fileName"="mfie$fileName")
+colnames(allcol)
+
 ```
 
-the naming convention was wrong in the posttest recordings
+join allcol with measurements by colname "fileName" 
 
-Such that the order was not condition_sequenceNr but sequenceNr_condition. Fixing this
 
-### separating the posttest recordings and non-posttest recordings
-```{r}
-library(dplyr)
-p <- nc %>%
-  filter(seq == "Post")
-nrow(p)
 
-np <- nc %>% 
-  filter(seq != "Post")
-nrow(np)
-  
-```
-
-### reversing the content of the last two columns in the posttest subset
-
-```{r}
-post <- p %>% rename(seq = block,
-             block = seq)
-head(post)
-
-wposttest <- post %>% relocate(seq, .after = block)
-head(wposttest)
-```
-
-### row-binding the posttest subset and the non-posttest subset
-```{r}
-all <- rbind(np, wposttest)
-nrow(all)
-```
-
-### remove all the practice tokens
-```{r}
-alldata <- all %>% 
-  filter(seq != "practice") %>% 
-  filter(block != "practice")
-```
 
 ```{r}
 alldata %>% 
@@ -103,6 +98,13 @@ alldata$seq <- as.numeric(alldata$seq)
 ### previewing the current structure
 ```{r}
 head(alldata)
-write.csv(alldata,'recordingInfo.csv', row.names=FALSE)
+#write.csv(alldata,'recordingInfo.csv', row.names=FALSE)
+```
+
+### coding in the block names correctly
+
+E.g., if the participant went through the sequence of AF -> MN, then assign AF1, MN2 to the AF and MN blocks; if the participant went through the sequence of MN -> AF, then assign MN1, AF2 to the AF and MN blocks. Also coding in the bite block condition, since ultimately the analysis is comparing four groups.
+```{r}
+
 ```
 
