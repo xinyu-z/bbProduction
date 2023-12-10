@@ -744,6 +744,48 @@ summary(f1hzprepost)</code></pre>
 ## blckPst:LbE  0.152 -0.705 -0.152 -0.293 -0.002  0.505                
 ## BBBB:LabelE  0.154 -0.360 -0.298 -0.298 -0.001  0.499    0.510       
 ## blP:BBBB:LE -0.109  0.506  0.210  0.211  0.001 -0.706   -0.719 -0.707</code></pre>
+<pre class="r"><code>f2hzprepost &lt;- lmer(F2Hz ~ block * BB * block* Label + gender + (1|subj) + (1|word), data = prepost)
+summary(f2hzprepost)</code></pre>
+<pre><code>## Linear mixed model fit by REML [&#39;lmerMod&#39;]
+## Formula: F2Hz ~ block * BB * block * Label + gender + (1 | subj) + (1 |  
+##     word)
+##    Data: prepost
+## 
+## REML criterion at convergence: 23423.6
+## 
+## Scaled residuals: 
+##     Min      1Q  Median      3Q     Max 
+## -6.2328 -0.5602 -0.0181  0.5161  6.4825 
+## 
+## Random effects:
+##  Groups   Name        Variance Std.Dev.
+##  subj     (Intercept) 13382    115.7   
+##  word     (Intercept) 14516    120.5   
+##  Residual             12062    109.8   
+## Number of obs: 1902, groups:  subj, 54; word, 6
+## 
+## Fixed effects:
+##                       Estimate Std. Error t value
+## (Intercept)           2204.760     73.819  29.867
+## blockPost              -33.127     10.210  -3.245
+## BBBB                   -33.930     33.092  -1.025
+## LabelE                -252.803     98.908  -2.556
+## genderM               -254.596     42.814  -5.947
+## blockPost:BBBB          -2.707     14.240  -0.190
+## blockPost:LabelE        26.317     14.489   1.816
+## BBBB:LabelE             37.231     14.256   2.612
+## blockPost:BBBB:LabelE  -24.773     20.165  -1.229
+## 
+## Correlation of Fixed Effects:
+##             (Intr) blckPs BBBB   LabelE gendrM blP:BBBB blP:LE BBBB:L
+## blockPost   -0.070                                                   
+## BBBB        -0.229  0.155                                            
+## LabelE      -0.670  0.052  0.016                                     
+## genderM     -0.089  0.000 -0.032  0.000                              
+## blckPs:BBBB  0.050 -0.717 -0.215 -0.037  0.000                       
+## blckPst:LbE  0.049 -0.705 -0.109 -0.074 -0.001  0.505                
+## BBBB:LabelE  0.050 -0.360 -0.215 -0.075 -0.001  0.499    0.510       
+## blP:BBBB:LE -0.035  0.506  0.152  0.053  0.001 -0.706   -0.718 -0.707</code></pre>
 <pre class="r"><code>#filter for MN1 and AF1, comprare with pretest
 bl1 &lt;- db |&gt; filter(block == &quot;Pre&quot; | block == &quot;MN1&quot; | block == &quot;AF1&quot;)
 

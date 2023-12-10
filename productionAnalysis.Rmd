@@ -220,6 +220,9 @@ prepost <- db |> filter(block == "Pre" | block == "Post")
 
 f1hzprepost <- lmer(F1Hz ~ block * BB * block* Label + gender + (1|subj) + (1|word), data = prepost)
 summary(f1hzprepost)
+
+f2hzprepost <- lmer(F2Hz ~ block * BB * block* Label + gender + (1|subj) + (1|word), data = prepost)
+summary(f2hzprepost)
 ```
 
 ```{r}
