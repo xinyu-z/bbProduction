@@ -5,8 +5,8 @@ date: "2023-03-27"
 output: html_document
 ---
 
-### read in the list of file names and add a header
-```{r}
+### Measurements from genders and phonemes
+```{r echo=TRUE}
 library(dplyr)
 fi<- read.csv("allFemaleI.csv", header = TRUE, sep = "\t")
 fig<- fi |> mutate(gender = c(rep("F", times = nrow(fi))))
@@ -32,7 +32,7 @@ mfie<- rbind(fig, feg, mig, meg)
 ```{r}
 prod <- read.table(text = as.character(mfie$fileName), sep = "_")
 head(prod)
-```
+
 ### removing the ".wav" from the final column
 #```{r}
 #library(stringr)
@@ -42,7 +42,8 @@ head(prod)
 #   str_sub(prod$V5, end=-5)
 #  )
 #head(prod)
-#```
+```
+
 
 ### renaming the column names accordingly
 ```{r}
@@ -52,7 +53,7 @@ newcols <- prod %>%
 colnames(newcols)
 
 #revert the "Post" and the "seq" for posttest items 
-#if v5 = post, v5 = v4, v4 = v5 (look up how to exchange)
+#if v5 = post, v5 = v4, v4 = v5
 correctPost <- newcols |> 
   mutate(V51 = ifelse(V5 == "Post", V4, V5),
          V4 = ifelse(V5 == "Post", V5, V4)) |> 
@@ -62,7 +63,7 @@ correctPost <- newcols |>
 head(correctPost)
 
 #rename new columns accordingly
-nc<- newcols %>% 
+nc<- correctPost %>% 
   rename("subj" = "V2",
          "word" = "V3",
          "block" = "V4",
@@ -74,37 +75,161 @@ head(nc)
 allcol<- as.data.frame(cbind(mfie$fileName, nc))|> rename("fileName"="mfie$fileName")
 colnames(allcol)
 
+df <- full_join(allcol, mfie, by = "fileName") |> rename("F0Hz" = "F0.Hz.", "F1Hz" = "F1.Hz.", "F2Hz" = "F2.Hz.", "F1Bark" = "F1.Bark.", "F2Bark" = "F2.Bark.")
+
+#add column about BB condition
+
+d <- df |> 
+   mutate(
+    BB = case_when(
+      subj == "2" ~ "BB",
+      subj == "4" ~ "BB",
+      subj == "5" ~ "BB",
+      subj == "9" ~ "BB",
+      subj == "10" ~ "BB",
+      subj == "12" ~ "BB",
+      subj == "13" ~ "BB",
+      subj == "14" ~ "BB",
+      subj == "15" ~ "BB",
+      subj == "16" ~ "BB",
+      subj == "17" ~ "BB",
+      subj == "19" ~ "BB",
+      subj == "22" ~ "BB",
+      subj == "25" ~ "BB",
+      subj == "28" ~ "BB",
+      subj == "32" ~ "BB",
+      subj == "33" ~ "BB",
+      subj == "34" ~ "BB",
+      subj == "37" ~ "BB",
+      subj == "39" ~ "BB",
+      subj == "41" ~ "BB",
+      subj == "42" ~ "BB",
+      subj == "44" ~ "BB",
+      subj == "45" ~ "BB",
+      subj == "48" ~ "BB",
+      subj == "52" ~ "BB",
+      subj == "53" ~ "BB",
+      subj == "55" ~ "BB",
+      subj == "58" ~ "BB",
+      subj == "59" ~ "BB",
+      subj == "60" ~ "BB",
+      TRUE ~ "NB")
+   )
+
 ```
 
-join allcol with measurements by colname "fileName" 
+### plotting
 
+```{r}
+library(ggplot2)
+#NB group pre and post
+nbpre<- d |> filter(BB == "NB", block == "Pre", Label == "I")
+nbpost <- d |> filter(BB == "NB", block == "Post", Label == "I")
+nb <- rbind(nbpre, nbpost)
 
+ggplot(data = nb, aes(x = F2Hz, y = F1Hz, color = block))+
+  geom_point(alpha = 0.5)
+```
+
+```{r}
+#BB group pre and post
+bbpre<- d |> filter(BB == "BB", block == "Pre", Label == "E")
+bbpost <- d |> filter(BB == "BB", block == "Post",Label == "E")
+bb <- rbind(bbpre, bbpost)
+
+ggplot(data = bb, aes(x = F2Hz, y = F1Hz, color = block))+
+  geom_point(alpha = 0.5)
+
+```
 
 
 ```{r}
-alldata %>% 
-  group_by(subj) %>% 
-  summarise(total_count=n(),
-            .groups = 'drop')
+library(ggplot2)
+#BB group pretest and test
+bbprentest<- d |> filter(BB == "BB", Label == "E")
+#nrow(bbprentest)
+
+ggplot(data = bbprentest, aes(x = F2Hz, y = F1Hz, color = block))+
+  geom_point(alpha = 0.5)
 ```
 
 
-
-### sequence number should be numeric
+counting subjects
 ```{r}
-alldata$seq <- as.numeric(alldata$seq)
+d |> count(subj)
 ```
 
-### previewing the current structure
-```{r}
-head(alldata)
-#write.csv(alldata,'recordingInfo.csv', row.names=FALSE)
-```
+
 
 ### coding in the block names correctly
 
 E.g., if the participant went through the sequence of AF -> MN, then assign AF1, MN2 to the AF and MN blocks; if the participant went through the sequence of MN -> AF, then assign MN1, AF2 to the AF and MN blocks. Also coding in the bite block condition, since ultimately the analysis is comparing four groups.
 ```{r}
 
+#define a function
+#correctBlocks <- function(n) {
+
+mn2subj <- c("2", "3", "5", "6", "8", "9", "10", "12", "15", "17", "19", "26", "30", "31", "33", "35", "38", "40", "42", "43", "46", "48", "50", "51", "52", "53", "54", "56", "58", "60")
+
+db <-  d |> 
+  mutate(
+    block = case_when(
+      subj %in% mn2subj & block == "MN1" ~ "MN2",
+      subj %in% mn2subj & block == "AF2" ~ "AF1",
+      subj %in% mn2subj & block == "Pre" ~ "Pre",
+      subj %in% mn2subj & block == "Post" ~ "Post",
+      !(subj %in% mn2subj) & block == "MN1" ~ "MN1",
+      !(subj %in% mn2subj) & block == "AF2" ~ "AF2",
+      !(subj %in% mn2subj) & block == "Pre" ~ "Pre",
+      !(subj %in% mn2subj) & block == "Post" ~ "Post",
+      
+    )
+    )
+#}
+```
+
+
+
+```{r}
+#check if all subjects are coded correctly
+
+db |> filter(block == "MN2") |> count(subj)
+```
+
+linear regression:
+```{r}
+library(lme4)
+#contrast coding
+db$BB <- as.factor(db$BB)
+db$BB <- relevel(db$BB, ref = "NB")
+
+db$Label <- as.factor(db$Label)
+db$Label <- relevel(db$Label, ref = "I")
+
+db$block <- as.factor(db$block)
+db$block <- relevel(db$block, ref = "Pre")
+
+#model with all blocks
+f1hzallbl <- lmer(F1Hz ~ block * BB * block* Label + gender + (1|subj) + (1|word), data = db)
+summary(f1hzallbl)
+```
+
+```{r}
+#filter for the pre and post conditions
+prepost <- db |> filter(block == "Pre" | block == "Post")
+
+f1hzprepost <- lmer(F1Hz ~ block * BB * block* Label + gender + (1|subj) + (1|word), data = prepost)
+summary(f1hzprepost)
+```
+
+```{r}
+#filter for MN1 and AF1, comprare with pretest
+bl1 <- db |> filter(block == "Pre" | block == "MN1" | block == "AF1")
+
+f1hzbl1 <- lmer(F1Hz ~ block * BB * block* Label + gender + (1|subj) + (1|word), data = bl1)
+summary(f1hzbl1)
+
+f2hzbl1 <- lmer(F2Hz ~ block * BB * block* Label + gender + (1|subj) + (1|word), data = bl1)
+summary(f2hzbl1)
 ```
 
