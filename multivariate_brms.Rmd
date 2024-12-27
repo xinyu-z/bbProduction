@@ -1,0 +1,37 @@
+---
+title: "multivariate brms for F1 and F2"
+output: html_notebook
+author: "Xinyu Zhang"
+date: "2024-27-12"
+---
+
+```{r setup, include=FALSE}
+# Basic settings (just trust me on this :P)
+options(scipen = 99999) 
+options(mc.cores=2) 
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, cache=TRUE)
+options(tinytex.verbose = TRUE)
+```
+
+# Reading in data
+
+```{r}
+df <- read.csv("productionFullTable.csv")
+#showing the structure of the data table
+head(df)
+```
+
+# Basic multivariate
+
+```{r}
+library(brms)
+
+mult1 <- bf(mvbind(F1Hz, F2Hz) ~ block * BB * AF* Label + gender + (1|p|subj) + (1|q|word)) + set_rescor(TRUE)
+
+# "|p|" in between indicates that all varying effects of `subj` should be modeled aas correlated (F1&F2 intercept per subject). Same with "|q|".
+
+# "set_rescor=(TRUE)" indicates that the errors of F1 and F2 estimates are to be modeled as correlated
+
+fit1 <- brm(mult1, data = df, chains = 2, cores = 2)
+```
+
