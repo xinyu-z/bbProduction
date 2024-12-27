@@ -186,8 +186,7 @@ db <-  d |>
       !(subj %in% mn2subj) & block == "MN1" ~ "MN1",
       !(subj %in% mn2subj) & block == "AF2" ~ "AF2",
       !(subj %in% mn2subj) & block == "Pre" ~ "Pre",
-      !(subj %in% mn2subj) & block == "Post" ~ "Post",
-      
+      !(subj %in% mn2subj) & block == "Post" ~ "Post"
     )
     )
 #}
@@ -325,6 +324,20 @@ BBBB:AFMN:LabelE        -23.8587    19.2555  -1.239 at pretest, the difference b
 block2:BBBB:AFMN:LabelE -29.3712    27.2894  -1.076 when comparing test to pretest, the effect of BB on the /I/-/E/ contrast (not significant, see block2:BBBB:LabelE) was not modulated by the MN
 
 block4:BBBB:AFMN:LabelE -36.1044    27.2431  -1.325 when comparing posttest to pretest, the effect of BB on the /I/-/E/ contrast (not significant, see block4:BBBB:LabelE) was not modulated by the MN
+
+```{r}
+#effect plots
+library (effects)
+ eall.f1hzallbl <- predictorEffects(f1hzallbl)
+ #plot(eall.f1hzallbl)
+ #plot(predictorEffects(f1hzallbl, ~BB))
+ #plot(predictorEffects(f1hzallbl, ~block))
+ plot(predictorEffects(f1hzallbl, ~Label))
+```
+
+
+
+
 
 
 ```{r}

@@ -1,0 +1,39 @@
+---
+title: "production analysis"
+output: html_document
+date: "2024-04-04"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## read in data
+
+```{r cars}
+df <- read.csv("productionFullTable.csv", header = TRUE, sep = ",")
+head(df)
+```
+
+## multivariate analysis
+```{r}
+library(dplyr)
+#contrast coding
+df$BB <- as.factor(df$BB)
+df$BB <- relevel(df$BB, ref = "NB")
+
+df$Label <- as.factor(df$Label)
+df$Label <- relevel(df$Label, ref = "I")
+
+df$block <- as.factor(df$block)
+df$block <- relevel(df$block, ref = "1")
+
+df$gender <- as.factor(df$gender)
+df$gender <- relevel(df$gender, ref = "F")
+
+library(lme4)
+#model with blocks 1,2,4
+#hzAllBl <- lmer(cbind(F1Hz, F2Hz) ~ block * BB * AF* Label + gender + (1|subj) + (1|word), data = df)
+#summary(hzAllBl)
+```
+
