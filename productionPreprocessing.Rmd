@@ -254,19 +254,24 @@ df <- db |> filter(block == "Pre" | block == "AF1" | block == "MN1" | block == "
       block == "Post" ~ "4")
    )
 
+#change variables into correct data types
+df$BB <- as.factor(df$BB)
+df$Label <- as.factor(df$Label)
+df$block <- as.factor(df$block)
+df$gender <- as.factor(df$gender)
+df$AF <- as.factor(df$AF)
+df$F0Hz <- as.numeric(df$F0Hz)
+df$subj <- as.character(df$subj)
+
 write.csv(df, "productionFullTable.csv")
 
 #contrast coding
-df$BB <- as.factor(df$BB)
 df$BB <- relevel(df$BB, ref = "NB")
 
-df$Label <- as.factor(df$Label)
 df$Label <- relevel(df$Label, ref = "I")
 
-df$block <- as.factor(df$block)
 df$block <- relevel(df$block, ref = "1")
 
-df$gender <- as.factor(df$gender)
 df$gender <- relevel(df$gender, ref = "F")
 
 #model with blocks 1,2,4
