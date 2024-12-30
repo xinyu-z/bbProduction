@@ -3,15 +3,17 @@ title: "multivariate brms for F1 and F2"
 author: "Xinyu Zhang"
 date: "2024-27-12"
 output:
-  pdf_document: default
+  html_document:
+    df_print: paged
   html_notebook: default
+  pdf_document: default
 ---
 
 ```{r setup, include=FALSE}
 # Basic settings (just trust me on this :P)
 options(scipen = 99999) 
 options(mc.cores=2) 
-knitr::opts_chunk$set(echo = FALSE, warning = FALSE, cache=TRUE)
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, cache=TRUE)
 options(tinytex.verbose = TRUE)
 ```
 
@@ -19,6 +21,20 @@ options(tinytex.verbose = TRUE)
 
 ```{r}
 df <- read.csv("productionFullTable.csv")
+
+#change variables into correct data types
+df$BB <- as.factor(df$BB)
+df$Label <- as.factor(df$Label)
+df$block <- as.factor(df$block)
+df$gender <- as.factor(df$gender)
+df$AF <- as.factor(df$AF)
+df$subj <- as.character(df$subj)
+df$seq <- as.numeric(df$seq)
+df$F0Hz <- as.numeric(df$F0Hz)
+df$F1Hz <- as.numeric(df$F1Hz)
+df$F2Hz <- as.numeric(df$F2Hz)
+df$F1Bark <- as.numeric(df$F1Bark)
+df$F2Bark <- as.numeric(df$F2Bark)
 #showing the structure of the data table
 head(df)
 ```
