@@ -60,3 +60,20 @@ fit1 <- add_criterion(fit1, "loo")
 summary(fit1)
 ```
 
+# posterior predictive check
+
+```{r}
+pp_check(fit1, resp = "F1Hz")
+
+pp_check(fit1, resp = "F2Hz")
+```
+
+The fit looks good, with a little bit of unmodeled left skewness of the distribution of F1.
+
+# Check $R^2$
+
+```{r}
+bayes_R2(fit1)
+```
+
+The R squared looks really good :)
