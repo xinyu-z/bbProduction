@@ -22,6 +22,7 @@ options(tinytex.verbose = TRUE)
 ```{r}
 df <- read.csv("productionFullTable.csv")
 
+
 #change variables into correct data types
 df$BB <- as.factor(df$BB)
 df$Label <- as.factor(df$Label)
@@ -35,8 +36,24 @@ df$F1Hz <- as.numeric(df$F1Hz)
 df$F2Hz <- as.numeric(df$F2Hz)
 df$F1Bark <- as.numeric(df$F1Bark)
 df$F2Bark <- as.numeric(df$F2Bark)
+
+#coding the reference level for contrasts
+df$BB <- relevel(df$BB, ref = "NB") #non-bite-block group as reference 
+
+df$AF <- relevel(df$AF, ref = "AF") #regular auditory feedback group as reference
+
+df$Label <- relevel(df$Label, ref = "E") #vowel /E/ as reference because it is less affected by the bite block
+
+df$block <- relevel(df$block, ref = "1") #block 1 as reference because it's the pretest
+
+gender.contrast <- cbind (c (-0.5, +0.5)) # female = -0.5, male = +0.5 
+colnames (gender.contrast) <- c ("-F+M")
+contrasts (df$gender) <- gender.contrast #it makes more sense to have the grand mean as reference level than having either gender. See the other html file for comparison
+
+
 #showing the structure of the data table
-head(df)
+library(dplyr)
+summary(df)
 ```
 
 # Basic multivariate
