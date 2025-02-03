@@ -94,3 +94,19 @@ bayes_R2(fit1)
 ```
 
 The R squared looks really good :)
+
+# using an ex-Gaussian distribution as family instead of Gaussian
+
+* (Gamma failed)
+* (ex-gaussian did not mix at default iterations)
+```{r}
+mult2 <- bf(mvbind(F1Hz, F2Hz) ~ block * BB * AF* Label + gender + (1|p|subj) + (1|q|word)) #set_rescor(TRUE) is not possible for exgaussian
+
+fit2 <- brm(mult2, data = df,family = exgaussian(link = "identity", link_sigma = "log", link_beta = "log"), chains = 2, cores = 2, iter = 3000)
+```
+
+```{r}
+fit2 <- add_criterion(fit2, "loo")
+summary(fit2)
+```
+
