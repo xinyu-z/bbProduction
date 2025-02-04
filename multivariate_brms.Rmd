@@ -98,11 +98,11 @@ The R squared looks really good :)
 # using an ex-Gaussian distribution as family instead of Gaussian
 
 * (Gamma failed)
-* (ex-gaussian did not mix at default iterations)
+* (ex-gaussian did not mix at default iterations, changing the iteration count to 3000 or 4000 did not help)
 ```{r}
 mult2 <- bf(mvbind(F1Hz, F2Hz) ~ block * BB * AF* Label + gender + (1|p|subj) + (1|q|word)) #set_rescor(TRUE) is not possible for exgaussian
 
-fit2 <- brm(mult2, data = df,family = exgaussian(link = "identity", link_sigma = "log", link_beta = "log"), chains = 2, cores = 2, iter = 3000)
+fit2 <- brm(mult2, data = df,family = exgaussian(link = "identity", link_sigma = "log", link_beta = "log"), chains = 2, cores = 2, iter = 4000)
 ```
 
 ```{r}
