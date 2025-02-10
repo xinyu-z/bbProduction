@@ -129,15 +129,63 @@ Meaning a student_t distribution with:
 
 degree of freedom (\nu) = 3, location(\mu) = 493, and SD (\sigma) = 111.2
 
-Trying to set a prior for a higher \sigma, so that we allow a wider peak in the distribution, 
+## Trying to set a prior for a higher \sigma, so that we allow a wider peak in the distribution, 
 
 and hopefully reduce the skewness in the fit
 
 ```{r}
 mult1 <- bf(mvbind(F1Hz, F2Hz) ~ block * BB * AF* Label + gender + (1|p|subj) + (1|q|word)) + set_rescor(TRUE) #same as the first model
-fit2 <- brm(mult1, data = df, 
-            prior = set_prior("student_t(3, 493, 250)", class = "Intercept", resp = "F1Hz"),
+fit3 <- brm(mult1, data = df, 
+            prior = set_prior("student_t(3, 0, 250)", class = "sd", resp = "F1Hz", group = "subj", coef = "Intercept"),
             chains = 2, cores = 2, seed = 655)
+summary(fit3)
 ```
 
+Doing a new pp_check
+```{r}
+pp_check(fit3, resp = "F1Hz")
+
+pp_check(fit3, resp = "F2Hz")
+```
+
+I do not see much difference in the fit from the first model with flat priors.
+
+Checking R^2
+```{r}
+bayes_R2(fit3)
+```
+
+R^2 did not improve.
+
+Trying a different family with the prior included
+
+```{r}
+fit4 <- brm(mult2, data = df,family = exgaussian(link = "identity", link_sigma = "log", link_beta = "log"),
+            prior = set_prior("student_t(3, 0, 250)", class = "sd", resp = "F1Hz", group = "subj", coef = "Intercept"),
+             chains = 2, cores = 2, iter = 4000)
+
+
+summary(fit4)
+```
+
+The R-hat and the bulk_ESS do not look good enough for the results to be reliable.
+
+new pp check:
+
+```{r}
+pp_check(fit4, resp = "F1Hz")
+
+pp_check(fit4, resp = "F2Hz")
+```
+
+The F1 fit looks a bit better (but it's unreliable anyway). but F2 is worse.
+
+## Trying to set a prior for the median in F1, according to data from Adank (2004), averaged across genders at 505Hz (because of the -0.5/+0.5 contrast coding here), which is not too different from the 493 in my data. (But still keeping the default family and default iteration count)
+
+```{r}
+fit5 <- brm(mult2, data = df,
+            prior = set_prior("student_t(3, 505, 250)", class = "Intercept", resp = "F1Hz"),
+            chains = 2, cores = 2)
+summary(fit5)
+```
 
