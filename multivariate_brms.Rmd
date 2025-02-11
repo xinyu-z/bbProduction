@@ -189,3 +189,10 @@ fit5 <- brm(mult2, data = df,
 summary(fit5)
 ```
 
+pp check
+
+```{r}
+pp_check(fit5, resp = "F1Hz")
+
+pp_check(fit5, resp = "F2Hz")
+```
