@@ -122,29 +122,55 @@ d <- df |>
 
 ```{r}
 library(ggplot2)
-#NB group pre and post
-nbpre<- d |> filter(BB == "NB", block == "Pre", Label == "I")
-nbpost <- d |> filter(BB == "NB", block == "Post", Label == "I")
+library(patchwork)
+#NB group pre and post for I
+nbprei<- d |> filter(BB == "NB", block == "Pre", Label == "I")
+nbposti <- d |> filter(BB == "NB", block == "Post", Label == "I")
+nbi <- rbind(nbprei, nbposti)
+
+ggplot(data = nbi, aes(x = F2Hz, y = F1Hz, color = block))+
+  geom_point(alpha = 0.5) +xlim(1250, 2750) + ylim(100, 1750)
+
+#NB group pre and post for E
+nbpree<- d |> filter(BB == "NB", block == "Pre", Label == "E")
+nbposte <- d |> filter(BB == "NB", block == "Post", Label == "E")
+nbe <- rbind(nbpree, nbposte)
+
+ggplot(data = nbe, aes(x = F2Hz, y = F1Hz, color = block))+
+  geom_point(alpha = 0.8) +ylim(100, 1750)+xlim(1250,2750)
+
+#I and E together
+nbpre<- d |> filter(BB == "NB", block == "Pre")
+nbpost <- d |> filter(BB == "NB", block == "Post")
 nb <- rbind(nbpre, nbpost)
 
-ggplot(data = nb, aes(x = F2Hz, y = F1Hz, color = block))+
-  geom_point(alpha = 0.5)
+ggplot(data = nb, aes(x = F2Hz, y = F1Hz, color = block, shape = Label))+
+  geom_point(alpha = 0.7) +ylim(100, 1750)+ xlim(1250,2750)
+
+pi<- ggplot(data = nbi, aes(x = F2Hz, y = F1Hz, color = block))+
+  geom_point(alpha = 0.5) +xlim(1250, 2750) + ylim(100, 1750) + labs(title = "pre vs post I")
+
+pe<-ggplot(data = nbe, aes(x = F2Hz, y = F1Hz, color = block))+
+  geom_point(alpha = 0.8) +ylim(100, 1750)+xlim(1250,2750)+ labs(title = "pre vs post E")
+pi + pe
 ```
 
 ```{r}
+library(patchwork)
 #BB group pre and post
 bbpre<- d |> filter(BB == "BB", block == "Pre") #, Label == "E")
 bbpost <- d |> filter(BB == "BB", block == "Post") #,Label == "E")
 bb <- rbind(bbpre, bbpost)
 
 #contrast at pretest for BB group
-ggplot(data = bbpre, aes(x = F2Hz, y = F1Hz, color = Label))+
-  geom_point(alpha = 0.5)
+p1 <- ggplot(data = bbpre, aes(x = F2Hz, y = F1Hz, color = Label))+
+  geom_point(alpha = 0.5) + xlim(1200,3000) + ylim(100, 1500)
 
 #contrast at posttest for BB group
-ggplot(data = bbpost, aes(x = F2Hz, y = F1Hz, color = Label))+
-  geom_point(alpha = 0.5)
+p2 <- ggplot(data = bbpost, aes(x = F2Hz, y = F1Hz, color = Label))+
+  geom_point(alpha = 0.5) + xlim(1200,3000) + ylim(100, 1500)
 
+p1 + p2
 ```
 
 

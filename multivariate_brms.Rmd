@@ -63,7 +63,7 @@ library(brms)
 
 mult1 <- bf(mvbind(F1Hz, F2Hz) ~ block * BB * AF* Label + gender + (1|p|subj) + (1|q|word)) + set_rescor(TRUE)
 
-# "|p|" in between indicates that all varying effects of `subj` should be modeled aas correlated (F1&F2 intercept per subject). Same with "|q|".
+# "|p|" in between indicates that all varying effects of `subj` should be modeled as correlated (F1&F2 intercept per subject). Same with "|q|".
 
 # "set_rescor=(TRUE)" indicates that the errors of F1 and F2 estimates are to be modeled as correlated
 
