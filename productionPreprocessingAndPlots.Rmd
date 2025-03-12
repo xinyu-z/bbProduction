@@ -174,17 +174,6 @@ p1 + p2
 ```
 
 
-```{r}
-library(ggplot2)
-#BB group pretest and test
-bbprentest<- d |> filter(BB == "BB", Label == "E")
-#nrow(bbprentest)
-
-ggplot(data = bbprentest, aes(x = F2Hz, y = F1Hz, color = block))+
-  geom_point(alpha = 0.5)
-```
-
-
 counting subjects
 ```{r}
 d |> count(subj)
