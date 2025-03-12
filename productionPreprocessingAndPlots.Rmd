@@ -508,32 +508,134 @@ f2barkallbl <- lmer(F2Bark ~ block * BB * AF* Label + gender + (1|subj) + (1|wor
 summary(f2barkallbl)
 ```
 
-#### Ridge plots
+### Ridge plots
 
+#### ridge plots for RQ1
 ```{r}
 #in hertz
+library(ggplot2)
+library(ggridges)
+#define color-blindness-friendly colors
+vowelcolor <- c("#0072B2", "#CC79A7")
+
+#AF, F1
+afdf <- df |> filter(AF == "AF")
+
+ggplot(afdf, aes(x = F1Hz, y = block, fill = BB, linetype = Label)) +
+  geom_density_ridges(alpha = 0.6, scale = 1.2) +
+  theme_ridges() +
+  #scale_fill_discrete(breaks = c ("F1Hertz","F2Hertz")) +
+  scale_fill_manual(values = vowelcolor)
+  #+ggtitle("F1 in two vowels between groups in each test block, with regular auditory feedback")
+  
+ggsave("ridgeF1BlockXBB*vowel_AF.png", plot = last_plot(), device = NULL, scale = 1,dpi = 600)
+
+#AF, F2
+ggplot(afdf, aes(x = F2Hz, y = block, fill = BB, linetype = Label)) +
+  geom_density_ridges(alpha = 0.6, scale = 1.2) +
+  theme_ridges() +
+  #scale_fill_discrete(breaks = c ("F1Hertz","F2Hertz")) +
+  scale_fill_manual(values = vowelcolor)
+  #+ggtitle("formant values in two vowels between groups in each test block, with regular auditory feedback")
+
+ggsave("ridgeF2BlockXBB*vowel_AF.png", plot = last_plot(), device = NULL, scale = 1,dpi = 600)
+
+
+# MN F1
+mndf <- df |> filter(AF == "MN")
+ggplot(mndf, aes(x = F1Hz, y = block, fill = BB, linetype = Label)) +
+  geom_density_ridges(alpha = 0.6, scale = 1.2) +
+  theme_ridges() +
+  #scale_fill_discrete(breaks = c ("F1Hertz","F2Hertz")) +
+  scale_fill_manual(values = vowelcolor)
+  #+ggtitle("formant values in two vowels between groups in each test block, with masking noise")
+  
+ggsave("ridgeF1BlockXBB*vowel_MN.png", plot = last_plot(), device = NULL, scale = 1,dpi = 600)
+
+#MN F2
+ggplot(mndf, aes(x = F2Hz, y = block, fill = BB, linetype = Label)) +
+  geom_density_ridges(alpha = 0.6, scale = 1.2) +
+  theme_ridges() +
+  #scale_fill_discrete(breaks = c ("F1Hertz","F2Hertz")) +
+  scale_fill_manual(values = vowelcolor)
+  #+ggtitle("formant values in two vowels between groups in each test block, with masking noise")
+  
+ggsave("ridgeF2BlockXBB*vowel_MN.png", plot = last_plot(), device = NULL, scale = 1,dpi = 600)
+```
+
+#### ridge plots for RQ2
+```{r}
+#BB*AF at block 2 because that is the only significant block
+#F1
+ggplot(df, aes(x = F1Hz, y = AF, fill = BB, linetype = Label)) +
+  geom_density_ridges(alpha = 0.6, scale = 1.2) +
+  theme_ridges() +
+  scale_fill_manual(values = vowelcolor)
+  #+ggtitle("formant values in two vowels between groups in each test block, with masking noise")
+  
+ggsave("ridgeF1Block*BB_block2.png", plot = last_plot(), device = NULL, scale = 1,dpi = 600)
+#hyper articulation in the MN condition because Lombard?
+
+#F2
+ggplot(df, aes(x = F2Hz, y = AF, fill = BB, linetype = Label)) +
+  geom_density_ridges(alpha = 0.6, scale = 1.2) +
+  theme_ridges() +
+  #scale_fill_discrete(breaks = c ("F1Hertz","F2Hertz")) +
+  scale_fill_manual(values = vowelcolor)
+  #+ggtitle("formant values in two vowels between groups in each test block, with masking noise")
+  
+ggsave("ridgeF2Block*BB_block2.png", plot = last_plot(), device = NULL, scale = 1,dpi = 600)
+```
+
+### ridge plots for RQ3
+
+```{r}
+#AF
+
 #reshaping data
 library(tidyr)
-ridgedf <- df |> filter(block == "2", AF == "AF") |> 
+ridgedfaf <- df |> filter(block == "4", AF == "AF") |> 
   pivot_longer(
     cols = c("F1Hz","F2Hz"), 
     names_to = "formant", 
     values_to = "Hertz",
   )
-head(ridgedf)
+head(ridgedfaf)
 
-library(ggplot2)
-library(ggridges)
-#define color-blindness-friendly colors
-color <- c("#0072B2", "#CC79A7")
-ggplot(ridgedf, aes(x = Hertz, y = formant, fill = BB)) +
+ggplot(ridgedfaf, aes(x = Hertz, y = formant, fill = BB)) +
   geom_density_ridges(alpha = 0.6) +
   theme_ridges() +
   scale_fill_discrete(breaks = c ("F1Hertz","F2Hertz")) +
-  scale_fill_manual(values = color)+
-  ggtitle("formant values at block 2, for AF condition")
-#ggsave("ridgeBlock2AF.png", plot = last_plot(), device = NULL, scale = 1,dpi = 600)
+  scale_fill_manual(values = vowelcolor)+
+  ggtitle("formant values at block 4, for AF group")
+ggsave("ridgeBlock4AF.png", plot = last_plot(), device = NULL, scale = 1,dpi = 600)
+
+#MN
+#reshaping data
+library(tidyr)
+ridgedfaf <- df |> filter(block == "4", AF == "MN") |> 
+  pivot_longer(
+    cols = c("F1Hz","F2Hz"), 
+    names_to = "formant", 
+    values_to = "Hertz",
+  )
+head(ridgedfaf)
+
+ggplot(ridgedfaf, aes(x = Hertz, y = formant, fill = BB)) +
+  geom_density_ridges(alpha = 0.6) +
+  theme_ridges() +
+  scale_fill_discrete(breaks = c ("F1Hertz","F2Hertz")) +
+  scale_fill_manual(values = vowelcolor)+
+  ggtitle("formant values at block 4, for MN group")
+ggsave("ridgeBlock4MN.png", plot = last_plot(), device = NULL, scale = 1,dpi = 600)
 ```
+```
+```
+
+
+
+
+
 
 ```{r}
 #reshaping data
