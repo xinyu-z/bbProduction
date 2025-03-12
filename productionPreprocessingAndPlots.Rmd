@@ -637,6 +637,12 @@ ggsave("ridgeBlock4MN.png", plot = last_plot(), device = NULL, scale = 1,dpi = 6
 
 
 
+
+
+
+
+
+
 ```{r}
 #reshaping data
 library(tidyr)
