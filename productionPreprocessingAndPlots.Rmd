@@ -629,8 +629,7 @@ ggplot(ridgedfaf, aes(x = Hertz, y = formant, fill = BB)) +
   ggtitle("formant values at block 4, for MN group")
 ggsave("ridgeBlock4MN.png", plot = last_plot(), device = NULL, scale = 1,dpi = 600)
 ```
-```
-```
+
 
 
 
