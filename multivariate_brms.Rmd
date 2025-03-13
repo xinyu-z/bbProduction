@@ -95,6 +95,15 @@ bayes_R2(fit1)
 
 The R squared looks really good :)
 
+## generating a LateX table of the coefficients
+```{r}
+kable(coef(summary(fit1)), "latex")
+```
+
+
+
+
+
 # using an ex-Gaussian distribution as family instead of Gaussian
 
 * (Gamma failed)
