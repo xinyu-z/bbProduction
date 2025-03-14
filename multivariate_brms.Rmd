@@ -97,7 +97,9 @@ The R squared looks really good :)
 
 ## generating a LateX table of the coefficients
 ```{r}
-kable(coef(summary(fit1)), "latex")
+library(kableExtra)
+kable(coef(fit1), "latex")
+#kable((coef(summary(fit1), "latex")))
 ```
 
 
