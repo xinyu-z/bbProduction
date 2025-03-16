@@ -73,7 +73,7 @@ fit1 <- brm(mult1, data = df, chains = 2, cores = 2, seed = 206) #setting seed f
 # summarizing the results
 
 ```{r}
-fit1 <- add_criterion(fit1, "loo")
+#fit1 <- add_criterion(fit1, "loo")
 summary(fit1)
 ```
 
@@ -98,8 +98,9 @@ The R squared looks really good :)
 ## generating a LateX table of the coefficients
 ```{r}
 library(kableExtra)
-kable(coef(fit1), "latex")
-#kable((coef(summary(fit1), "latex")))
+fixef(fit1)
+kable(data.frame(fixef(fit1)),"latex")
+#the results will only show up in the console, so run this line in the console, and change the column names as needed
 ```
 
 
