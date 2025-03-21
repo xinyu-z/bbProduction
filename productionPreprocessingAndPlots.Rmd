@@ -517,22 +517,22 @@ library(ggplot2)
 library(ggridges)
 library(tidyr)
 #define color-blindness-friendly colors
-#vowelcolor <- c("#0072B2", "#CC79A7")
+vowelcolor <- c("#0072B2", "#CC79A7")
 
-#ridgeBaselinepivot <- df |> filter(block == "1") |> 
-  #pivot_longer(
-    #cols = c("F1Hz","F2Hz"), 
-    #names_to = "formant", 
-    #values_to = "Hertz",
- # )
+ridgeBaselinepivot <- df |> filter(block == "1") |> 
+  pivot_longer(
+    cols = c("F1Hz","F2Hz"), 
+    names_to = "formant", 
+    values_to = "Hertz",
+  )
 #head(ridgeBaselinepivot)
 
-#ggplot(ridgeBaselinepivot, aes(x = Hertz, y = formant, fill = Label)) +
-  #geom_density_ridges(alpha = 0.6) +
-  #theme_ridges() +
-  #scale_fill_discrete(breaks = c ("F1Hertz","F2Hertz")) +
-  #scale_fill_manual(values = vowelcolor)+
-  #ggtitle("formant values at pretest, pooled data")
+ggplot(ridgeBaselinepivot, aes(x = Hertz, y = formant, fill = Label)) +
+  geom_density_ridges(alpha = 0.6, scale = 1) +
+  theme_ridges() +
+  scale_fill_discrete(breaks = c ("F1Hertz","F2Hertz")) +
+  scale_fill_manual(values = vowelcolor)+
+  ggtitle("formant values at pretest, pooled data")
 #ggsave("ridgeBlock1pooled.png", plot = last_plot(), device = NULL, scale = 1,dpi = 600)
 
 
@@ -540,23 +540,23 @@ library(tidyr)
 ridgebaseline <- df |> filter(block == "1")
 colors <- c("F1Hz" = "#0072B2", "F2Hz" = "#CC79A7")
 ggplot(ridgebaseline, aes(y = Label)) +
-  geom_density_ridges(aes(x = F1Hz, fill = "F1Hz"), alpha = 0.6) + 
-  geom_density_ridges(aes(x = F2Hz, fill = "F2Hz"), alpha = 0.6)+
+  geom_density_ridges(aes(x = F1Hz, fill = "F1Hz"), alpha = 0.6, scale = 1) + 
+  geom_density_ridges(aes(x = F2Hz, fill = "F2Hz"), alpha = 0.6, scale = 1)+
   #scale_fill_manual(values = "#0072B2")+
-  theme_ridges() +labs(x = "Hz", y = "phoneme", fill = "Legend")+
-  ggtitle("formant values at pretest, pooled data")
-ggsave("ridgeBlock1pooled.png", plot = last_plot(), device = NULL, scale = 1,dpi = 600)
+  theme_ridges() +labs(x = "Hz", y = "phoneme", fill = "Legend")#+
+  #ggtitle("formant values at pretest, pooled data")
+#ggsave("ridgeBlock1pooled.png", plot = last_plot(), device = NULL, scale = 1,dpi = 600)
   
 
 ```
 
 
-#### ridge plots for RQ1
+#### ridge plots for RQ1 (old, not vowel-separated)
 ```{r}
 #in hertz
 
 #AF, F1
-afdf <- df |> filter(AF == "AF")
+afdf <- df |> filter((AF == "AF" & block == "1") | (AF == "AF" & block == "2"))
 
 ggplot(afdf, aes(x = F1Hz, y = block, fill = BB, linetype = Label)) +
   geom_density_ridges(alpha = 0.6, scale = 1.2) +
@@ -600,71 +600,143 @@ ggplot(mndf, aes(x = F2Hz, y = block, fill = BB, linetype = Label)) +
 #ggsave("ridgeF2BlockXBB*vowel_MN.png", plot = last_plot(), device = NULL, scale = 1,dpi = 600)
 ```
 
-#### ridge plots for RQ2
+#### after the meeting on Mar 18, WE ARE SEPARATING THE VOWELS and removing block 4
+##### let's also separate the aditory feedback conditions. Because they look different.
+
+```{r}
+#AF, F1 vowel E
+rq1e <- df |> filter((AF == "AF" & Label == "E" & block == "1") | (AF == "AF" & Label == "E" & block == "2"))
+
+p1 <- ggplot(rq1e, aes(x = F1Hz, y = block, fill = BB)) +
+  geom_density_ridges(alpha = 0.6, scale = 1.0) +
+  theme_ridges() +
+  #scale_fill_discrete(breaks = c ("F1Hertz","F2Hertz")) +
+  scale_fill_manual(values = vowelcolor)+
+  ggtitle("vowel E, regular auditory feedback")
+
+#AF, F1 vowel I 
+rq1i <- df |> filter((AF == "AF" & Label == "I" & block == "1") | (AF == "AF" & Label == "I" & block == "2"))
+
+p2 <- ggplot(rq1i, aes(x = F1Hz, y = block, fill = BB)) +
+  geom_density_ridges(alpha = 0.6, scale = 1.0) +
+  theme_ridges() +
+  #scale_fill_discrete(breaks = c ("F1Hertz","F2Hertz")) +
+  scale_fill_manual(values = vowelcolor)+
+  ggtitle("vowel I, regular auditory feedback")
+
+rq1emn <- df |> filter((AF == "MN" & Label == "E" & block == "1") | (AF == "MN" & Label == "E" & block == "2"))
+
+p3 <- ggplot(rq1emn, aes(x = F1Hz, y = block, fill = BB)) +
+  geom_density_ridges(alpha = 0.6, scale = 1.0) +
+  theme_ridges() +
+  #scale_fill_discrete(breaks = c ("F1Hertz","F2Hertz")) +
+  scale_fill_manual(values = vowelcolor)+
+  ggtitle("vowel E, masking noise")
+
+rq1imn <- df |> filter((AF == "MN" & Label == "I" & block == "1") | (AF == "MN" & Label == "I" & block == "2"))
+
+p4 <- ggplot(rq1imn, aes(x = F1Hz, y = block, fill = BB)) +
+  geom_density_ridges(alpha = 0.6, scale = 1.0) +
+  theme_ridges() +
+  #scale_fill_discrete(breaks = c ("F1Hertz","F2Hertz")) +
+  scale_fill_manual(values = vowelcolor)+
+  ggtitle("vowel I, masking noise")
+
+rq1ridge <- p1 + p2 + p3 + p4
+rq1ridge
+ggsave("rq1ridge.png", plot = last_plot(), device = NULL, scale = 1,dpi = 600)
+```
+
+
+
+
+#### ridge plots for RQ2 (separating vowels)
 ```{r}
 #BB*AF at block 2 because that is the only significant block
-#F1
-ggplot(df, aes(x = F1Hz, y = AF, fill = BB, linetype = Label)) +
+#F1, vowel E
+dfe <- df |> filter(Label == "E")
+p1 <- ggplot(dfe, aes(x = F1Hz, y = AF, fill = BB)) +
   geom_density_ridges(alpha = 0.6, scale = 1.2) +
   theme_ridges() +
-  scale_fill_manual(values = vowelcolor)
-  #+ggtitle("formant values in two vowels between groups in each test block, with masking noise")
+  scale_fill_manual(values = vowelcolor)+
+  ggtitle("vowel E")
   
+#F1, vowel I
+dfi <- df |> filter(Label == "I")
+p2 <- ggplot(dfi, aes(x = F1Hz, y = AF, fill = BB)) +
+  geom_density_ridges(alpha = 0.6, scale = 1.2) +
+  theme_ridges() +
+  scale_fill_manual(values = vowelcolor)+
+  ggtitle("vowel I")
+
 #ggsave("ridgeF1Block*BB_block2.png", plot = last_plot(), device = NULL, scale = 1,dpi = 600)
 #hyper articulation in the MN condition because Lombard?
 
-#F2
-ggplot(df, aes(x = F2Hz, y = AF, fill = BB, linetype = Label)) +
+#F2, vowel E
+p3 <- ggplot(dfe, aes(x = F2Hz, y = AF, fill = BB)) +
   geom_density_ridges(alpha = 0.6, scale = 1.2) +
   theme_ridges() +
   #scale_fill_discrete(breaks = c ("F1Hertz","F2Hertz")) +
-  scale_fill_manual(values = vowelcolor)
-  #+ggtitle("formant values in two vowels between groups in each test block, with masking noise")
+  scale_fill_manual(values = vowelcolor) +
+  ggtitle("vowel E")
+
+#F2, vowel I
+p4 <- ggplot(dfe, aes(x = F2Hz, y = AF, fill = BB)) +
+  geom_density_ridges(alpha = 0.6, scale = 1.2) +
+  theme_ridges() +
+  #scale_fill_discrete(breaks = c ("F1Hertz","F2Hertz")) +
+  scale_fill_manual(values = vowelcolor)+
+  ggtitle("vowel I")
+
+p1+p2+p3+p4
   
-#ggsave("ridgeF2Block*BB_block2.png", plot = last_plot(), device = NULL, scale = 1,dpi = 600)
+ggsave("rq2ridge.png", plot = last_plot(), device = NULL, scale = 1,dpi = 600)
 ```
+
 
 ### ridge plots for RQ3
 
 ```{r}
-#AF
+#AF, F1 vowel E
+rq4e <- df |> filter((AF == "AF" & Label == "E" & block == "1") | (AF == "AF" & Label == "E" & block == "2")| (AF == "AF" & Label == "E" & block == "4"))
 
-#reshaping data
-library(tidyr)
-ridgedfaf <- df |> filter(block == "4", AF == "AF") |> 
-  pivot_longer(
-    cols = c("F1Hz","F2Hz"), 
-    names_to = "formant", 
-    values_to = "Hertz",
-  )
-head(ridgedfaf)
-
-ggplot(ridgedfaf, aes(x = Hertz, y = formant, fill = BB, linetype = Label)) +
-  geom_density_ridges(alpha = 0.6) +
+p4a <- ggplot(rq4e, aes(x = F1Hz, y = block, fill = BB)) +
+  geom_density_ridges(alpha = 0.6, scale = 1.0) +
   theme_ridges() +
-  scale_fill_discrete(breaks = c ("F1Hertz","F2Hertz")) +
+  #scale_fill_discrete(breaks = c ("F1Hertz","F2Hertz")) +
   scale_fill_manual(values = vowelcolor)+
-  ggtitle("formant values at block 4, for AF group")
-ggsave("ridgeBlock4AF.png", plot = last_plot(), device = NULL, scale = 1,dpi = 600)
+  ggtitle("vowel E, regular auditory feedback")
 
-#MN
-#reshaping data
-library(tidyr)
-ridgedfaf <- df |> filter(block == "4", AF == "MN") |> 
-  pivot_longer(
-    cols = c("F1Hz","F2Hz"), 
-    names_to = "formant", 
-    values_to = "Hertz",
-  )
-head(ridgedfaf)
+#AF, F1 vowel I 
+rq4i <- df |> filter((AF == "AF" & Label == "I" & block == "1") | (AF == "AF" & Label == "I" & block == "2") | (AF == "AF" & Label == "I" & block == "4"))
 
-ggplot(ridgedfaf, aes(x = Hertz, y = formant, fill = BB)) +
-  geom_density_ridges(alpha = 0.6) +
+p4b <- ggplot(rq4i, aes(x = F1Hz, y = block, fill = BB)) +
+  geom_density_ridges(alpha = 0.6, scale = 1.0) +
   theme_ridges() +
-  scale_fill_discrete(breaks = c ("F1Hertz","F2Hertz")) +
+  #scale_fill_discrete(breaks = c ("F1Hertz","F2Hertz")) +
   scale_fill_manual(values = vowelcolor)+
-  ggtitle("formant values at block 4, for MN group")
-ggsave("ridgeBlock4MN.png", plot = last_plot(), device = NULL, scale = 1,dpi = 600)
+  ggtitle("vowel I, regular auditory feedback")
+
+rq4emn <- df |> filter((AF == "MN" & Label == "E" & block == "1") | (AF == "MN" & Label == "E" & block == "2")|(AF == "MN" & Label == "E" & block == "4"))
+
+p4c <- ggplot(rq4emn, aes(x = F1Hz, y = block, fill = BB)) +
+  geom_density_ridges(alpha = 0.6, scale = 1.0) +
+  theme_ridges() +
+  #scale_fill_discrete(breaks = c ("F1Hertz","F2Hertz")) +
+  scale_fill_manual(values = vowelcolor)+
+  ggtitle("vowel E, masking noise")
+
+rq4imn <- df |> filter((AF == "MN" & Label == "I" & block == "1") | (AF == "MN" & Label == "I" & block == "2") | (AF == "MN" & Label == "I" & block == "4"))
+
+p4d <- ggplot(rq4imn, aes(x = F1Hz, y = block, fill = BB)) +
+  geom_density_ridges(alpha = 0.6, scale = 1.0) +
+  theme_ridges() +
+  #scale_fill_discrete(breaks = c ("F1Hertz","F2Hertz")) +
+  scale_fill_manual(values = vowelcolor)+
+  ggtitle("vowel I, masking noise")
+
+p4a + p4b + p4c + p4d 
+ggsave("rq3ridge.png", plot = last_plot(), device = NULL, scale = 1,dpi = 600)
 ```
 
 
