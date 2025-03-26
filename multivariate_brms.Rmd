@@ -208,3 +208,18 @@ pp_check(fit5, resp = "F1Hz")
 
 pp_check(fit5, resp = "F2Hz")
 ```
+
+## basic multivariate but on ERB values
+```{r}
+library(brms)
+
+multERB <- bf(mvbind(F1erb, F2erb) ~ block * BB * AF* Label + gender + (1|p|subj) + (1|q|word)) + set_rescor(TRUE)
+
+# "|p|" in between indicates that all varying effects of `subj` should be modeled as correlated (F1&F2 intercept per subject). Same with "|q|".
+
+# "set_rescor=(TRUE)" indicates that the errors of F1 and F2 estimates are to be modeled as correlated
+
+fitERB <- brm(multERB, data = df, chains = 2, cores = 2, seed = 342) #setting seed for reproducibility
+summary(fitERB)
+```
+
