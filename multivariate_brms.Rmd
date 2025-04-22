@@ -20,7 +20,7 @@ options(tinytex.verbose = TRUE)
 # Reading in data
 
 ```{r}
-df <- read.csv("productionFullTable.csv")
+df <- data.frame(read.csv("productionFullTable.csv"))
 
 
 #change variables into correct data types

@@ -1,3 +1,4 @@
 Rcpp
 brms
 dplyr
+kableExtra
