@@ -1,0 +1,62 @@
+---
+title: "preprocessing for vowel ellipses"
+output: html_notebook
+---
+
+
+Load original data set and change variables into correct data types
+```{r}
+df <- read.csv("productionFullTable.csv")
+df$BB <- as.factor(df$BB) 
+df$Label <- as.factor(df$Label)  
+df$block <- as.factor(df$block)  
+df$gender <- as.factor(df$gender) 
+df$AF <- as.factor(df$AF) 
+df$subj <- as.character(df$subj)
+df$seq <- as.numeric(df$seq)
+df$F0Hz <- as.numeric(df$F0Hz) 
+df$F1Hz <- as.numeric(df$F1Hz) 
+df$F2Hz <- as.numeric(df$F2Hz) 
+df$F1Bark <- as.numeric(df$F1Bark) 
+df$F2Bark <- as.numeric(df$F2Bark)
+```
+
+subset for baseline ellipses
+```{r}
+library(dplyr)
+block1 <- df |> 
+  filter(block == 1) |> 
+  select(c(Label, F1Hz, F2Hz, gender))
+
+#write.table(block1, "block1.csv", sep = "\t", row.names = FALSE)
+#"The number of elements (0) is not a multiple of the number of columns (1)."
+
+```
+
+plotting block1
+```{r}
+library(ggplot2)
+ggplot(block1, aes(x=F1Hz, y=F2Hz, color = Label)) + 
+  geom_point()+
+  stat_ellipse(type = "norm")
+```
+
+Subset for post test
+
+```{r}
+block4 <- df |> 
+  filter(block == 4, AF == "AF") |> 
+  select(c(Label, F1Hz, F2Hz, gender, BB))
+
+```
+
+Plot BB vs NB at post test
+```{r}
+library(viridis)
+ggplot(block4, aes(x=F1Hz, y=F2Hz, color = Label, linetype = BB, shape = BB)) + 
+  geom_point()+
+  stat_ellipse(type = "norm")+
+  scale_color_viridis(discrete=TRUE, option="viridis")
+```
+
+
