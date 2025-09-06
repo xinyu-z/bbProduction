@@ -223,3 +223,13 @@ fitERB <- brm(multERB, data = df, chains = 2, cores = 2, seed = 342) #setting se
 summary(fitERB)
 ```
 
+Checking for sequence effect:
+
+```{r}
+multSeq <- bf(mvbind(F1Hz, F2Hz) ~ block * BB * AF* Label + gender + seq + (1|p|subj) + (1|q|word)) + set_rescor(TRUE)
+
+fitSeq <- brm(multSeq, data = df, chains = 2, cores = 2, seed = 1816) #setting seed for reproducibility
+summary(fitSeq)
+```
+
+Seq itself not significant for either F1 or F2
