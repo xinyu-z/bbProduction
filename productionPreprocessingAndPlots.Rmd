@@ -375,7 +375,7 @@ library (effects)
 ```{r}
 # BB group, pre vs test, both phonemes
 
-bbprentestE<- df |> filter(BB == "BB", Label == "E") |> filter(block == "1" | block == "2") |> mutate(block = case_when(block == "1" ~ "pretest",
+bbprentestE<- df |> dplyr::filter(BB == "BB", Label == "E") |> filter(block == "1" | block == "2") |> mutate(block = case_when(block == "1" ~ "pretest",
                         block == "2" ~ "test"))
 bbprentestI<- df |> filter(BB == "BB", Label == "I") |> filter(block == "1" | block == "2")|> mutate(block = case_when(block == "1" ~ "pretest",
                         block == "2" ~ "test"))
@@ -523,8 +523,11 @@ summary(f2barkallbl)
 library(ggplot2)
 library(ggridges)
 library(tidyr)
+library(dplyr)
 #define color-blindness-friendly colors
 vowelcolor <- c("#0072B2", "#CC79A7")
+
+#df <- data.frame(read.csv("productionFullTable.csv"))
 
 ridgeBaselinepivot <- df |> filter(block == "1") |> 
   pivot_longer(
@@ -561,12 +564,12 @@ ggplot(ridgebaseline, aes(y = Label)) +
 #### ridge plots for RQ1 (old, not vowel-separated)
 ```{r}
 #in hertz
-
+library(dplyr)
 #AF, F1
 afdf <- df |> filter((AF == "AF" & block == "1") | (AF == "AF" & block == "2"))
 
 ggplot(afdf, aes(x = F1Hz, y = block, fill = BB, linetype = Label)) +
-  geom_density_ridges(alpha = 0.6, scale = 1.2) +
+  geom_density_ridges(alpha = 0.6, scale = 1.2) + 
   theme_ridges() +
   #scale_fill_discrete(breaks = c ("F1Hertz","F2Hertz")) +
   scale_fill_manual(values = vowelcolor)
@@ -781,7 +784,7 @@ f1mn<- ggplot(superMN, aes(x = F1Hz, y = block, fill = BB, linetype = Label)) +
   theme_ridges() +
   #scale_fill_discrete(breaks = c ("F1Hertz","F2Hertz")) +
   scale_fill_manual(values = vowelcolor)+
-  ggtitle("Maksing noise at block2")
+  ggtitle("Masking noise at block2")
 
 f2af <- ggplot(superAF, aes(x = F2Hz, y = block, fill = BB, linetype = Label)) +
   geom_density_ridges(alpha = 0.6, scale = 1.0) +
@@ -795,11 +798,11 @@ f2mn<- ggplot(superMN, aes(x = F2Hz, y = block, fill = BB, linetype = Label)) +
   theme_ridges() +
   #scale_fill_discrete(breaks = c ("F1Hertz","F2Hertz")) +
   scale_fill_manual(values = vowelcolor)+
-  ggtitle("Maksing noise at block2")
+  ggtitle("Masking noise at block2")
 
 f1af + f1mn + f2af + f2mn
 
-ggsave("overviewridge.png", plot = last_plot(), width = 10, height = 5, device = NULL, scale = 1,dpi = 600)
+#ggsave("overviewridge.png", plot = last_plot(), width = 10, height = 5, device = NULL, scale = 1,dpi = 600)
 
 
 
