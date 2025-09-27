@@ -297,7 +297,7 @@ df$gender <- relevel(df$gender, ref = "F")
 df<- df |> mutate(F1erb = 11.17 * log((F1Hz + 312)/(F1Hz + 14680)) + 43,
              F2erb = 11.17 * log((F2Hz + 312)/(F1Hz + 14680)) + 43)
 
-write.csv(df, "productionFullTable.csv")
+#write.csv(df, "productionFullTable.csv")
 
 
 
