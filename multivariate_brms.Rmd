@@ -223,18 +223,86 @@ fitERB <- brm(multERB, data = df, chains = 2, cores = 2, seed = 342) #setting se
 summary(fitERB)
 ```
 
-Checking for sequence effect:
+## Checking for sequence effect in bite block group:
 
 ```{r}
-multSeq <- bf(mvbind(F1Hz, F2Hz) ~ block * BB * AF* Label + gender + seq + (1|p|subj) + (1|q|word)) + set_rescor(TRUE)
+#subset to block 2
+bb2<- df %>% filter(block == "2" , BB == "BB")
 
-fitSeq <- brm(multSeq, data = df, chains = 2, cores = 2, seed = 1816) #setting seed for reproducibility
-summary(fitSeq)
+seqbb2 <- bf(mvbind(F1Hz, F2Hz) ~  AF * Label * seq + gender + (1|p|subj) + (1|q|word)) + set_rescor(TRUE)
+
+fitSeqbb2 <- brm(seqbb2, data = bb2, chains = 2, cores = 2, seed = 1749) #setting seed for reproducibility
+summary(fitSeqbb2)
+#there was a sequence effect for F2 with seed= 1525, and "+seq" instead of "*seq"
 ```
 
-Seq itself not significant for either F1 or F2
+There is a sequence effect in block 2 for the BB group, both for F1 and F2 (for F2 only when it's "+seq" instead of "*seq"), and an interaction of label:seq.
 
-Checking for interactions of seq with other fixed effects
+
+```{r}
+#subset to block 4
+bb4<- df %>% filter(block == "4" , BB == "BB")
+
+seqbb4 <- bf(mvbind(F1Hz, F2Hz) ~  AF * Label * seq + gender + (1|p|subj) + (1|q|word)) + set_rescor(TRUE)
+
+fitSeqbb4 <- brm(seqbb4, data = bb4, chains = 2, cores = 2, seed = 1744) #setting seed for reproducibility
+summary(fitSeqbb4)
+```
+
+There is a sequence effect for both F1 and F2 for the BB group in block 4. No interaction.
+
+## Checking for sequence effect in control group:
+
+```{r}
+#subset to block 2
+nb2<- df %>% filter(block == "2" , BB == "NB")
+
+seqnb2 <- bf(mvbind(F1Hz, F2Hz) ~  AF * Label * seq + gender + (1|p|subj) + (1|q|word)) + set_rescor(TRUE)
+
+fitSeqnb2 <- brm(seqnb2, data = nb2, chains = 2, cores = 2, seed = 1838) #setting seed for reproducibility
+summary(fitSeqnb2)
+
+```
+
+
+
+
+```{r}
+#subset to block 4
+nb4<- df %>% filter(block == "4" , BB == "NB")
+
+seqnb4 <- bf(mvbind(F1Hz, F2Hz) ~  AF * Label * seq + gender + (1|p|subj) + (1|q|word)) + set_rescor(TRUE)
+
+fitSeqnb4 <- brm(seqnb4, data = nb4, chains = 2, cores = 2, seed = 1838) #setting seed for reproducibility
+summary(fitSeqnb4)
+```
+
+## checking seq but adding BB as a fixed effect 
+
+```{r}
+#subset to block 2
+block2<- df %>% filter(block == "2")
+
+seqb2 <- bf(mvbind(F1Hz, F2Hz) ~  BB * AF * Label * seq + gender + (1|p|subj) + (1|q|word)) + set_rescor(TRUE)
+
+fitSeqb2 <- brm(seqb2, data = block2, chains = 2, cores = 2, seed = 1838) #setting seed for reproducibility
+summary(fitSeqb2)
+
+```
+
+
+```{r}
+#subset to block 4
+block4<- df %>% filter(block == "4")
+
+seqb4 <- bf(mvbind(F1Hz, F2Hz) ~  BB * AF * Label * seq + gender + (1|p|subj) + (1|q|word)) + set_rescor(TRUE)
+
+fitSeqb4 <- brm(seqb4, data = block4, chains = 2, cores = 2, seed = 1838) #setting seed for reproducibility
+summary(fitSeqb4)
+
+```
+
+
 
 ```{r}
 multSeqInt <- bf(mvbind(F1Hz, F2Hz) ~ block * BB * AF* Label * seq + gender + (1|p|subj) + (1|q|word)) + set_rescor(TRUE)
