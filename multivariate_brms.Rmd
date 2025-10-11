@@ -99,7 +99,7 @@ The R squared looks really good :)
 ```{r}
 library(kableExtra)
 fixef(fit1)
-kable(data.frame(fixef(fit1)),"latex")
+kable(data.frame(fixef(fit1)), digits = 2, "latex")
 #the results will only show up in the console, so run this line in the console, and change the column names as needed
 ```
 
@@ -236,6 +236,19 @@ summary(fitSeqbb2)
 #there was a sequence effect for F2 with seed= 1525, and "+seq" instead of "*seq"
 ```
 
+```{r}
+#not considering seq for interaction
+#subset to block 2
+bb2<- df %>% filter(block == "2" , BB == "BB")
+
+seqbb2s <- bf(mvbind(F1Hz, F2Hz) ~  AF * Label + seq + gender + (1|p|subj) + (1|q|word)) + set_rescor(TRUE)
+
+fitSeqbb2s <- brm(seqbb2s, data = bb2, chains = 2, cores = 2, seed = 1525) #setting seed for reproducibility
+summary(fitSeqbb2s)
+```
+
+
+
 There is a sequence effect in block 2 for the BB group, both for F1 and F2 (for F2 only when it's "+seq" instead of "*seq"), and an interaction of label:seq.
 
 
@@ -250,6 +263,18 @@ summary(fitSeqbb4)
 ```
 
 There is a sequence effect for both F1 and F2 for the BB group in block 4. No interaction.
+
+
+```{r}
+#not considering seq for interaction
+#subset to block 4
+bb4<- df %>% filter(block == "4" , BB == "BB")
+
+seqbb4s <- bf(mvbind(F1Hz, F2Hz) ~  AF * Label + seq + gender + (1|p|subj) + (1|q|word)) + set_rescor(TRUE)
+
+fitSeqbb4s <- brm(seqbb4s, data = bb4, chains = 2, cores = 2, seed = 1941) #setting seed for reproducibility
+summary(fitSeqbb4s)
+```
 
 ## Checking for sequence effect in control group:
 
