@@ -280,6 +280,7 @@ summary(fitSeqbb4s)
 
 ```{r}
 #subset to block 2
+
 nb2<- df %>% filter(block == "2" , BB == "NB")
 
 seqnb2 <- bf(mvbind(F1Hz, F2Hz) ~  AF * Label * seq + gender + (1|p|subj) + (1|q|word)) + set_rescor(TRUE)
@@ -289,7 +290,15 @@ summary(fitSeqnb2)
 
 ```
 
+```{r}
+#subset to block 2, but as "+"
 
+seqnb2p <- bf(mvbind(F1Hz, F2Hz) ~  AF * Label + seq + gender + (1|p|subj) + (1|q|word)) + set_rescor(TRUE)
+
+fitSeqnb2p <- brm(seqnb2, data = nb2, chains = 2, cores = 2, seed = 1838) #setting seed for reproducibility
+summary(fitSeqnb2)
+
+```
 
 
 ```{r}
@@ -301,6 +310,19 @@ seqnb4 <- bf(mvbind(F1Hz, F2Hz) ~  AF * Label * seq + gender + (1|p|subj) + (1|q
 fitSeqnb4 <- brm(seqnb4, data = nb4, chains = 2, cores = 2, seed = 1838) #setting seed for reproducibility
 summary(fitSeqnb4)
 ```
+
+```{r}
+#subset to block 4, but seq as "+"
+
+seqnb4 <- bf(mvbind(F1Hz, F2Hz) ~  AF * Label + seq + gender + (1|p|subj) + (1|q|word)) + set_rescor(TRUE)
+
+fitSeqnb4 <- brm(seqnb4, data = nb4, chains = 2, cores = 2, seed = 1838) #setting seed for reproducibility
+summary(fitSeqnb4)
+```
+
+
+
+
 
 ## checking seq but adding BB as a fixed effect 
 
