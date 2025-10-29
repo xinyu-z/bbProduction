@@ -661,9 +661,9 @@ p4 <- ggplot(rq1imn, aes(x = F1Hz, y = as.factor(block), fill = BB)) +
   ylab("testing block")+
   ggtitle("vowel I, masking noise")
 
-p3 + xlim(0, 1500) + p4 + xlim(0, 1500)
+p1 + xlim(0, 1500) + p2 + xlim(0, 1500) + p3 + xlim(0, 1500) + p4 + xlim(0, 1500)
 
-ggsave("rq1ridgeF1MN.png", plot = last_plot(), width = 9.5, height = 3.5, device = NULL, dpi = 600)
+ggsave("rq1ridgeF1AFMN.png", plot = last_plot(), width = 9.5, height = 5.5, device = NULL, dpi = 600)
 
 ```
 
@@ -693,7 +693,7 @@ p2b <- ggplot(rq2i, aes(x = F2Hz, y = as.factor(block), fill = BB)) +
   ggtitle("vowel I, regular auditory feedback")
 
 p2a + xlim(500, 3200) + p2b + xlim(500, 3200)
-#ggsave("rq1ridgeF2.png", plot = last_plot(), width = 9.5, height = 3.5, device = NULL, dpi = 600)
+ggsave("rq1ridgeF2.png", plot = last_plot(), width = 9.5, height = 3.5, device = NULL, dpi = 600)
 
 rq2emn <- df |> filter((AF == "MN" & Label == "E" & block == "1") | (AF == "MN" & Label == "E" & block == "2"))
 
@@ -715,8 +715,9 @@ p2d <- ggplot(rq2imn, aes(x = F2Hz, y = as.factor(block), fill = BB)) +
   ylab("testing block")+
   ggtitle("vowel I, masking noise")
 
-p2c + xlim(500, 3200) + p2d + xlim(500, 3200)
-#ggsave("rq1ridgeF2MN.png", plot = last_plot(), width = 9.5, height = 3.5, device = NULL, dpi = 600)
+
+p2a + xlim(500, 3200) + p2b + xlim(500, 3200) + p2c + xlim(500, 3200) + p2d + xlim(500, 3200)
+#ggsave("rq1ridgeF2AFMN.png", plot = last_plot(), width = 9.5, height = 5.5, device = NULL, dpi = 600)
 ```
 
 
@@ -763,7 +764,7 @@ rq2If2 <- ggplot(dfi, aes(x = F2Hz, y = AF, fill = BB)) +
 
 rq2Ef1 + xlim(0, 1700) + rq2If1 + xlim(0, 1700) + rq2Ef2 + xlim(0, 3500) + rq2If2 + xlim(0, 3500)
   
-ggsave("rq2ridgeF1.png", plot = last_plot(), width = 9, height = 5, device = NULL, scale = 1,dpi = 600)
+ggsave("rq2ridge.png", plot = last_plot(), width = 9, height = 5, device = NULL, scale = 1,dpi = 600)
 
 rq2Ef1 + xlim(0, 3500) + rq2If1 + xlim(0, 3500) + rq2Ef2 + xlim(0, 3500) + rq2If2 + xlim(0, 3500)
 
@@ -803,7 +804,7 @@ f1mn<- ggplot(superMN, aes(x = F1Hz, y = as.factor(block), fill = BB, linetype =
   #scale_fill_discrete(breaks = c ("F1Hertz","F2Hertz")) +
   scale_fill_manual(values = vowelcolor)+
   ylab("testing block")+
-  ggtitle("Masking noise")
+  ggtitle("masking noise")
 
 f2af <- ggplot(superAF, aes(x = F2Hz, y = as.factor(block), fill = BB, linetype = Label)) +
   geom_density_ridges(alpha = 0.6, scale = 1.0) +
@@ -819,7 +820,7 @@ f2mn<- ggplot(superMN, aes(x = F2Hz, y = as.factor(block), fill = BB, linetype =
   #scale_fill_discrete(breaks = c ("F1Hertz","F2Hertz")) +
   scale_fill_manual(values = vowelcolor)+
   ylab("testing block")+
-  ggtitle("Masking noise")
+  ggtitle("masking noise")
 
 f1af +xlim(200,1250) + f1mn + xlim(200,1250) + f2af + xlim(500, 3200)+ f2mn+ xlim(500, 3200)
 
