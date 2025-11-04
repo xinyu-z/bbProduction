@@ -42,13 +42,19 @@ df$BB <- relevel(df$BB, ref = "NB") #non-bite-block group as reference
 
 df$AF <- relevel(df$AF, ref = "AF") #regular auditory feedback group as reference
 
-df$Label <- relevel(df$Label, ref = "E") #vowel /E/ as reference because it is less affected by the bite block
+#df$Label <- relevel(df$Label, ref = "E") #vowel /E/ as reference because it is less affected by the bite block
 
 df$block <- relevel(df$block, ref = "1") #block 1 as reference because it's the pretest
 
 gender.contrast <- cbind (c (-0.5, +0.5)) # female = -0.5, male = +0.5 
 colnames (gender.contrast) <- c ("-F+M")
 contrasts (df$gender) <- gender.contrast #it makes more sense to have the grand mean as reference level than having either gender. See the other html file for comparison
+
+#same for vowel contrast, changing it to sum coding.
+vowel.contrast <- cbind (c (-0.5, +0.5)) # E = -0.5, I = +0.5 
+colnames (vowel.contrast) <- c ("-E+I")
+contrasts (df$Label) <- vowel.contrast
+
 
 
 #showing the structure of the data table

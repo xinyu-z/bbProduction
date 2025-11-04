@@ -4,3 +4,6 @@ dplyr
 kableExtra
 ggplot2
 ggeffects
+Matrix
+lme4
+patchwork
