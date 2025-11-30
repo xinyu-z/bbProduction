@@ -62,6 +62,25 @@ library(dplyr)
 summary(df)
 ```
 
+#calculating mean F1 and mean F2 for reporting
+```{r}
+dfIm <- df %>% filter(Label == "I" & gender == "M")
+mean(dfIm$F1Hz)
+mean(dfIm$F2Hz)
+dfIf <- df %>% filter(Label == "I" & gender == "F")
+mean(dfIf$F1Hz)
+mean(dfIf$F2Hz)
+dfEm <- df %>% filter(Label == "E" & gender == "M")
+mean(dfEm$F1Hz)
+mean(dfEm$F2Hz)
+dfEf <- df %>% filter(Label == "E" & gender == "F")
+mean(dfEf$F1Hz)
+mean(dfEf$F2Hz)
+```
+
+
+
+
 # Basic multivariate
 
 ```{r}
