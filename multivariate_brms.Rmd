@@ -295,35 +295,8 @@ summary(fitERB)
 ## Checking for sequence effect in bite block group:
 
 ```{r}
-#subset to block 2
-bb2<- df %>% filter(block == "2" , BB == "BB")
-
-seqbb2 <- bf(mvbind(F1Hz, F2Hz) ~  AF * Label * seq + gender + (1|p|subj) + (1|q|word)) + set_rescor(TRUE)
-
-fitSeqbb2 <- brm(seqbb2, data = bb2, chains = 2, cores = 2, seed = 1749) #setting seed for reproducibility
-summary(fitSeqbb2)
-#there was a sequence effect for F2 with seed= 1525, and "+seq" instead of "*seq"
-```
-
-
-### not considering seq for interaction 
-
-```{r}
-#not considering seq for interaction
-#subset to block 2
-bb2<- df %>% filter(block == "2" , BB == "BB")
-
-seqbb2s <- bf(mvbind(F1Hz, F2Hz) ~  AF * Label + seq + gender + (1|p|subj) + (1|q|word)) + set_rescor(TRUE)
-
-fitSeqbb2s <- brm(seqbb2s, data = bb2, chains = 2, cores = 2, seed = 1525) #setting seed for reproducibility
-summary(fitSeqbb2s)
-```
-
-
-### Esther's suggestion to cross AF and Seq, and Seq*Label, but not AF * Label
-
-```{r}
 #subset to block 2, Esther's suggestion to cross AF and Seq, and Seq*Label, but not AF * Label 
+bb2<- df %>% filter(block == "2" , BB == "BB")
 
 seqbb2c <- bf(mvbind(F1Hz, F2Hz) ~  (AF + Label) * seq + gender + (1|p|subj) + (1|q|word)) + set_rescor(TRUE)
 
@@ -373,43 +346,21 @@ ggsave("seqBlock2.png", plot = last_plot(), width = 9.5, height = 5.5, device = 
 
 
 
-```{r}
-#subset to block 4
-bb4<- df %>% filter(block == "4" , BB == "BB")
-
-seqbb4 <- bf(mvbind(F1Hz, F2Hz) ~  AF * Label * seq + gender + (1|p|subj) + (1|q|word)) + set_rescor(TRUE)
-
-fitSeqbb4 <- brm(seqbb4, data = bb4, chains = 2, cores = 2, seed = 1744) #setting seed for reproducibility
-summary(fitSeqbb4)
-```
-
-There is a sequence effect for both F1 and F2 for the BB group in block 4. No interaction.
-
-
-```{r}
-#not considering seq for interaction
-#subset to block 4
-bb4<- df %>% filter(block == "4" , BB == "BB")
-
-seqbb4s <- bf(mvbind(F1Hz, F2Hz) ~  AF * Label + seq + gender + (1|p|subj) + (1|q|word)) + set_rescor(TRUE)
-
-fitSeqbb4s <- brm(seqbb4s, data = bb4, chains = 2, cores = 2, seed = 1941) #setting seed for reproducibility
-summary(fitSeqbb4s)
-```
-
 ### posttest: Esther's suggestion to cross AF and Seq, and Seq \* Label, but not AF \* Label
 
 ```{r}
 #subset to block 4, Esther's suggestion to cross AF and Seq, and Seq*Label, but not AF * Label 
 bb4<- df %>% filter(block == "4" , BB == "BB")
 
-seqbb4c <- bf(mvbind(F1Hz, F2Hz) ~  (AF + Label) * seq + gender + (1|p|subj) + (1|q|word)) + set_rescor(TRUE)
+seqbb4p <- bf(mvbind(F1Hz, F2Hz) ~  (AF + Label) * seq + gender + (1|p|subj) + (1|q|word)) + set_rescor(TRUE)
 
-fitSeqbb4c <- brm(seqbb4c, data = bb4, chains = 2, cores = 2, seed = 1722) #setting seed for reproducibility
-summary(fitSeqbb4c)
-kable(data.frame(fixef(fitSeqbb4c)), digits = 2, "latex")
+fitSeqbb4p <- brm(seqbb4p, data = bb4, chains = 2, cores = 2, seed = 1722) #setting seed for reproducibility
+summary(fitSeqbb4p)
+kable(data.frame(fixef(fitSeqbb4p)), digits = 2, "latex")
 
 ```
+
+
 ```{r}
 #control group
 #subset to block 4, Esther's suggestion to cross AF and Seq, and Seq*Label, but not AF * Label 
