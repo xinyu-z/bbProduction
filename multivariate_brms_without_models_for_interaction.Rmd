@@ -1,0 +1,101 @@
+---
+title: "multivariate_brms_without_models_for_interaction"
+output:
+  html_document:
+    df_print: paged
+---
+
+### reading in data
+```{r}
+df <- data.frame(read.csv("productionFullTable.csv"))
+
+
+#change variables into correct data types
+df$BB <- as.factor(df$BB)
+df$Label <- as.factor(df$Label)
+df$block <- as.factor(df$block)
+df$gender <- as.factor(df$gender)
+df$AF <- as.factor(df$AF)
+df$subj <- as.character(df$subj)
+df$seq <- as.numeric(df$seq)
+df$F0Hz <- as.numeric(df$F0Hz)
+df$F1Hz <- as.numeric(df$F1Hz)
+df$F2Hz <- as.numeric(df$F2Hz)
+df$F1Bark <- as.numeric(df$F1Bark)
+df$F2Bark <- as.numeric(df$F2Bark)
+
+#coding the reference level for contrasts
+df$BB <- relevel(df$BB, ref = "NB") #non-bite-block group as reference 
+
+df$AF <- relevel(df$AF, ref = "AF") #regular auditory feedback group as reference
+
+#df$Label <- relevel(df$Label, ref = "E") #vowel /E/ as reference because it is less affected by the bite block
+
+df$block <- relevel(df$block, ref = "1") #block 1 as reference because it's the pretest
+
+gender.contrast <- cbind (c (-0.5, +0.5)) # female = -0.5, male = +0.5 
+colnames (gender.contrast) <- c ("-F+M")
+contrasts (df$gender) <- gender.contrast #it makes more sense to have the grand mean as reference level than having either gender. See the other html file for comparison
+
+#same for vowel contrast, changing it to sum coding.
+vowel.contrast <- cbind (c (-0.5, +0.5)) # E = -0.5, I = +0.5 
+colnames (vowel.contrast) <- c ("-E+I")
+contrasts (df$Label) <- vowel.contrast
+
+
+
+#showing the structure of the data table
+library(dplyr)
+summary(df)
+```
+
+### original model
+
+```{r}
+library(brms)
+
+mult1 <- bf(mvbind(F1Hz, F2Hz) ~ block * BB * AF* Label + gender + (1|p|subj) + (1|q|word)) + set_rescor(TRUE)
+
+# "|p|" in between indicates that all varying effects of `subj` should be modeled as correlated (F1&F2 intercept per subject). Same with "|q|".
+
+# "set_rescor=(TRUE)" indicates that the errors of F1 and F2 estimates are to be modeled as correlated
+
+fit1 <- brm(mult1, data = df, chains = 2, cores = 2, seed = 206) #setting seed for reproducibility
+```
+
+### summarizing the results
+
+```{r}
+summary(fit1)
+```
+
+### posterior predictive check
+
+```{r}
+pp_check(fit1, resp = "F1Hz")
+
+pp_check(fit1, resp = "F2Hz")
+```
+
+
+### Check $R^2$
+
+```{r}
+bayes_R2(fit1)
+```
+
+### adding random slope
+```{r}
+#adding slope of label
+
+#multSl <- bf(mvbind(F1Hz, F2Hz) ~ block * BB * AF* Label + gender + (1|p|subj|Label) + (1|q|word)) + set_rescor(TRUE)
+
+# adding "Label" to the random structure, thus (1|p|subj|Label), gives the error "Invalid syntax used in group-level terms"
+
+# try removing the "p", and use (1|subj|Label)
+
+multSl <- bf(mvbind(F1Hz, F2Hz) ~ block * BB * AF* Label + gender + (1+ Label|p|subj) + (1|q|word)) + set_rescor(TRUE)
+
+fitSl <- brm(multSl, data = df, chains = 2, cores = 2, seed = 2026) #setting seed for reproducibility
+summary(fitSl)
+```
