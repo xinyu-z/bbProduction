@@ -84,9 +84,21 @@ mean(dfEf$F2Hz)
 # Basic multivariate
 
 ```{r}
-library(brms)
+#library(brms)
 
-mult1 <- bf(mvbind(F1Hz, F2Hz) ~ block * BB * AF* Label + gender + (1|p|subj) + (1|q|word)) + set_rescor(TRUE)
+#mult1 <- bf(mvbind(F1Hz, F2Hz) ~ block * BB * AF* Label + gender + (1|p|subj) + (1|q|word)) + set_rescor(TRUE)
+
+# "|p|" in between indicates that all varying effects of `subj` should be modeled as correlated (F1&F2 intercept per subject). Same with "|q|".
+
+# "set_rescor=(TRUE)" indicates that the errors of F1 and F2 estimates are to be modeled as correlated
+
+#fit1 <- brm(mult1, data = df, chains = 2, cores = 2, seed = 206) #setting seed for reproducibility
+```
+
+```{r}
+#library(brms)
+
+mult1 <- bf(mvbind(F1Hz, F2Hz) ~ block * BB * AF* Label + gender + (1+ Label|p|subj) + (1|q|word)) + set_rescor(TRUE)
 
 # "|p|" in between indicates that all varying effects of `subj` should be modeled as correlated (F1&F2 intercept per subject). Same with "|q|".
 
@@ -94,6 +106,7 @@ mult1 <- bf(mvbind(F1Hz, F2Hz) ~ block * BB * AF* Label + gender + (1|p|subj) + 
 
 fit1 <- brm(mult1, data = df, chains = 2, cores = 2, seed = 206) #setting seed for reproducibility
 ```
+
 
 # summarizing the results
 
@@ -282,7 +295,7 @@ pp_check(fit5, resp = "F2Hz")
 ```{r}
 library(brms)
 
-multERB <- bf(mvbind(F1erb, F2erb) ~ block * BB * AF* Label + gender + (1|p|subj) + (1|q|word)) + set_rescor(TRUE)
+multERB <- bf(mvbind(F1erb, F2erb) ~ block * BB * AF* Label + gender + (1 + Label|p|subj) + (1|q|word)) + set_rescor(TRUE)
 
 # "|p|" in between indicates that all varying effects of `subj` should be modeled as correlated (F1&F2 intercept per subject). Same with "|q|".
 
@@ -298,7 +311,7 @@ summary(fitERB)
 #subset to block 2, Esther's suggestion to cross AF and Seq, and Seq*Label, but not AF * Label 
 bb2<- df %>% filter(block == "2" , BB == "BB")
 
-seqbb2c <- bf(mvbind(F1Hz, F2Hz) ~  (AF + Label) * seq + gender + (1|p|subj) + (1|q|word)) + set_rescor(TRUE)
+seqbb2c <- bf(mvbind(F1Hz, F2Hz) ~  (AF + Label) * seq + gender + (1 + Label|p|subj) + (1|q|word)) + set_rescor(TRUE)
 
 fitSeqbb2c <- brm(seqbb2c, data = bb2, chains = 2, cores = 2, seed = 1706) #setting seed for reproducibility
 summary(fitSeqbb2c)
@@ -314,7 +327,7 @@ kable(data.frame(fixef(fitSeqbb2c)), digits = 2, "latex")
 
 nb2<- df %>% filter(block == "2" , BB == "NB")
 
-seqnb2c <- bf(mvbind(F1Hz, F2Hz) ~  (AF + Label) * seq + gender + (1|p|subj) + (1|q|word)) + set_rescor(TRUE)
+seqnb2c <- bf(mvbind(F1Hz, F2Hz) ~  (AF + Label) * seq + gender + (1 + Label|p|subj) + (1|q|word)) + set_rescor(TRUE)
 
 fitSeqnb2c <- brm(seqbb2c, data = nb2, chains = 2, cores = 2, seed = 1706) #setting seed for reproducibility
 summary(fitSeqnb2c)
@@ -329,18 +342,19 @@ library(patchwork)
 datbb2 <- predict_response(
   fitSeqbb2c,
   terms = c("seq", "Label"))
-b2 <- 
-  plot(datbb2,connect_lines = TRUE, one_plot = FALSE) + ylab("Hz") +ggtitle("bite block group during test")
+#b2 <- 
+  plot(datbb2,connect_lines = TRUE, one_plot = FALSE) + ylab("Hz") +ggtitle("")
 
-datnb2 <- predict_response(
-  fitSeqnb2c,
-  terms = c("seq", "Label"))
-n2 <-
-  plot(datnb2,connect_lines = TRUE, one_plot = FALSE) + ylab("Hz") +ggtitle("control group during test")
+#datnb2 <- predict_response(
+  #fitSeqnb2c,
+  #terms = c("seq", "Label"))
+#n2 <-
+  #plot(datnb2,connect_lines = TRUE, one_plot = FALSE) + ylab("Hz") +ggtitle("control group during test")
 
-b2+n2
+#b2+n2
 
-ggsave("seqBlock2.png", plot = last_plot(), width = 9.5, height = 5.5, device = NULL, dpi = 600)
+
+ggsave("seqBlock2BB.png", plot = last_plot(), width = 9.5, height = 5.5, device = NULL, dpi = 600)
 ```
 
 
@@ -352,7 +366,7 @@ ggsave("seqBlock2.png", plot = last_plot(), width = 9.5, height = 5.5, device = 
 #subset to block 4, Esther's suggestion to cross AF and Seq, and Seq*Label, but not AF * Label 
 bb4<- df %>% filter(block == "4" , BB == "BB")
 
-seqbb4p <- bf(mvbind(F1Hz, F2Hz) ~  (AF + Label) * seq + gender + (1|p|subj) + (1|q|word)) + set_rescor(TRUE)
+seqbb4p <- bf(mvbind(F1Hz, F2Hz) ~  (AF + Label) * seq + gender + (1 + Label|p|subj) + (1|q|word)) + set_rescor(TRUE)
 
 fitSeqbb4p <- brm(seqbb4p, data = bb4, chains = 2, cores = 2, seed = 1722) #setting seed for reproducibility
 summary(fitSeqbb4p)
@@ -366,7 +380,7 @@ kable(data.frame(fixef(fitSeqbb4p)), digits = 2, "latex")
 #subset to block 4, Esther's suggestion to cross AF and Seq, and Seq*Label, but not AF * Label 
 nb4<- df %>% filter(block == "4" , BB == "NB")
 
-seqnb4c <- bf(mvbind(F1Hz, F2Hz) ~  (AF + Label) * seq + gender + (1|p|subj) + (1|q|word)) + set_rescor(TRUE)
+seqnb4c <- bf(mvbind(F1Hz, F2Hz) ~  (AF + Label) * seq + gender + (1 + Label|p|subj) + (1|q|word)) + set_rescor(TRUE)
 
 fitSeqnb4c <- brm(seqnb4c, data = nb4, chains = 2, cores = 2, seed = 1722) #setting seed for reproducibility
 summary(fitSeqnb4c)
@@ -379,17 +393,17 @@ kable(data.frame(fixef(fitSeqnb4c)), digits = 2, "latex")
 plotting seq effect
 ```{r}
 datb4 <- predict_response(
-  fitSeqbb4c,
+  fitSeqbb4p,
   terms = c("seq", "Label"))
- b4 <- plot(datb4,connect_lines = TRUE, one_plot = TRUE) + ylab("Hz")+ggtitle("bite block group at posttest")
+ b4 <- plot(datb4,connect_lines = TRUE, one_plot = TRUE) + ylab("Hz")+ggtitle("")
  
-datnb4 <- predict_response(
-  fitSeqnb4c,
-  terms = c("seq", "Label"))
- nb4 <- plot(datnb4,connect_lines = TRUE, one_plot = TRUE) + ylab("Hz")+ggtitle("control group at posttest")
+#datnb4 <- predict_response(
+  #fitSeqnb4c,
+  #terms = c("seq", "Label"))
+ #nb4 <- plot(datnb4,connect_lines = TRUE, one_plot = TRUE) + ylab("Hz")+ggtitle("control group at posttest")
  
- b4 + nb4
-ggsave("seqBlock4.png", plot = last_plot(), width = 9.5, height = 5.5, device = NULL, dpi = 600)
+ b4 #+ nb4
+ggsave("seqBlock4BB.png", plot = last_plot(), width = 9.5, height = 5.5, device = NULL, dpi = 600)
 ```
 
 
@@ -437,6 +451,19 @@ fitSeqnb4 <- brm(seqnb4, data = nb4, chains = 2, cores = 2, seed = 1838) #settin
 summary(fitSeqnb4)
 ```
 
+```{r}
+#adding slope of label
+
+multSl <- bf(mvbind(F1Hz, F2Hz) ~ block * BB * AF* Label + gender + (1|subj|Label) + (1|q|word)) + set_rescor(TRUE)
+
+# "|p|" in between indicates that all varying effects of `subj` should be modeled as correlated (F1&F2 intercept per subject). Same with "|q|".
+
+# "set_rescor=(TRUE)" indicates that the errors of F1 and F2 estimates are to be modeled as correlated
+
+fitSl <- brm(multSl, data = df, chains = 2, cores = 2, seed = 2026) #setting seed for reproducibility
+summary(fitSl)
+```
+```
 
 
 
