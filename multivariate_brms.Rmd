@@ -10,7 +10,7 @@ output:
 ---
 
 ```{r setup, include=FALSE}
-# Basic settings (just trust me on this :P)
+# Basic settings
 options(scipen = 99999) 
 options(mc.cores=2) 
 knitr::opts_chunk$set(echo = TRUE, warning = FALSE, cache=TRUE)
@@ -115,6 +115,14 @@ fit1 <- brm(mult1, data = df, chains = 2, cores = 2, seed = 206) #setting seed f
 summary(fit1)
 ```
 
+## generating a LateX table of the coefficients
+```{r}
+library(kableExtra)
+fixef(fit1)
+kable(data.frame(fixef(fit1)), digits = 2, "latex")
+#the results will only show up in the console, so run this line in the console, and change the column names as needed
+```
+
 # posterior predictive check
 
 ```{r}
@@ -174,18 +182,6 @@ dat <- predict_response(
 #library(effects)
 #plot(effect( "block * BB * AF", fit1))
 ```
-
-
-
-## generating a LateX table of the coefficients
-```{r}
-library(kableExtra)
-fixef(fit1)
-kable(data.frame(fixef(fit1)), digits = 2, "latex")
-#the results will only show up in the console, so run this line in the console, and change the column names as needed
-```
-
-
 
 
 
@@ -305,7 +301,7 @@ fitERB <- brm(multERB, data = df, chains = 2, cores = 2, seed = 342) #setting se
 summary(fitERB)
 ```
 
-## Checking for sequence effect in bite block group:
+## Checking for trial effect in bite block group:
 
 ```{r}
 #subset to block 2, Esther's suggestion to cross AF and Seq, and Seq*Label, but not AF * Label 
@@ -315,6 +311,13 @@ seqbb2c <- bf(mvbind(F1Hz, F2Hz) ~  (AF + Label) * seq + gender + (1 + Label|p|s
 
 fitSeqbb2c <- brm(seqbb2c, data = bb2, chains = 2, cores = 2, seed = 1706) #setting seed for reproducibility
 summary(fitSeqbb2c)
+
+seqbb2erb <- bf(mvbind(F1erb, F2erb) ~  (AF + Label) * seq + gender + (1 + Label|p|subj) + (1|q|word)) + set_rescor(TRUE)
+
+fitSeqbb2erb <- brm(seqbb2erb, data = bb2, chains = 2, cores = 2, seed = 2119) #setting seed for reproducibility
+summary(fitSeqbb2erb)
+
+
 library(kableExtra)
 library(lme4)
 kable(data.frame(fixef(fitSeqbb2c)), digits = 2, "latex")
@@ -329,7 +332,7 @@ nb2<- df %>% filter(block == "2" , BB == "NB")
 
 seqnb2c <- bf(mvbind(F1Hz, F2Hz) ~  (AF + Label) * seq + gender + (1 + Label|p|subj) + (1|q|word)) + set_rescor(TRUE)
 
-fitSeqnb2c <- brm(seqbb2c, data = nb2, chains = 2, cores = 2, seed = 1706) #setting seed for reproducibility
+fitSeqnb2c <- brm(seqnb2c, data = nb2, chains = 2, cores = 2, seed = 1706) #setting seed for reproducibility
 summary(fitSeqnb2c)
 kable(data.frame(fixef(fitSeqnb2c)), digits = 2, "latex")
 ```
