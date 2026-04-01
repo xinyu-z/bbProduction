@@ -268,7 +268,7 @@ s3plot <- plot_ly(
         zaxis = list(title = 'PC3 score'))
         )
 
-saveWidget(s3plot, file = "3dplot.html")
+saveWidget(s3plot, file = "3dplotAF.html")
 ```
 
 Pick two random curves from the dataset, call them  `curve1` and `curve2`. Plot the curves. Then mark the corresponding points on the scatterplot.
@@ -361,7 +361,7 @@ ggplot(predCurvess1) +
 
 linear model on PC scores
 ```{r}
-s1lm <- lm(s2 ~  biteblock * AF + gender, data = PCscores)
+s1lm <- lm(s1 ~  biteblock * auditoryfeedback + gender, data = PCscores)
 summary(s1lm)
 ```
 
