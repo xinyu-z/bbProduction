@@ -1,0 +1,405 @@
+---
+title: "FPCA over trials"
+author: "Xinyu Zhang"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+```
+
+Load relevant libraries and set up.
+```{r}
+library(fda)
+library(funData)
+library(MFPCA)
+library(tidyverse)
+library(landmarkregUtils)
+library(emmeans)
+library(lme4)
+library(scatterplot3d)
+library(plotly)
+library(htmlwidgets)
+
+Category.colors <- c(NB = "#CD1076", BB = "#FFD39B" )
+afcolors <- c(AF = "darkslategray", MN = "orangered")
+```
+
+Load data
+```{r}
+#ex <- 1 # change according to ex number
+#raw_curves <- readRDS(file.path(data_dir, str_c("ex1D", ex, "rds", sep = '.'))) %>% ungroup() %>% 
+#  mutate(across(c(curveId, Category), ~ factor(.x)))
+
+df <-  read.csv("productionFullTable.csv")
+
+#change variables into correct data types
+df$BB <- as.factor(df$BB)
+df$Label <- as.factor(df$Label)
+df$block <- as.factor(df$block)
+df$gender <- as.factor(df$gender)
+df$AF <- as.factor(df$AF)
+df$subj <- as.character(df$subj)
+df$seq <- as.numeric(df$seq)
+df$F0Hz <- as.numeric(df$F0Hz)
+df$F1Hz <- as.numeric(df$F1Hz)
+df$F2Hz <- as.numeric(df$F2Hz)
+df$F2Bark <- as.numeric(df$F2Bark)
+df$F2Bark <- as.numeric(df$F2Bark)
+
+
+#mutate a new sequence number that does not return to zero at the start of every block
+df <- df %>% 
+  mutate(
+    seq = case_when(
+      block == "2" ~ seq +54,
+      block == "4" ~ seq +107,
+      TRUE ~ seq
+  )
+) %>% 
+  rename("biteblock" = "BB", "auditoryfeedback" = "AF")
+
+
+#df %>%
+  #filter(Label == "I") %>%
+  #count(subj, seq, Label) %>%
+ # filter(n > 0)
+
+df <- df %>%
+  filter(block =="2" | block == "1" ) %>%
+  #filter(block == "2") %>% 
+  filter (Label == "I") %>% #all blocks
+  distinct(subj, seq, .keep_all = TRUE)
+
+# nSamples <- 54
+# grid <- seq(1, 54, length.out = nSamples)
+# 
+# adf <- df %>%
+#   group_by(subj) %>%
+#   arrange(seq) %>%
+#   reframe({
+#     # extract vectors explicitly
+#     x <- seq
+#     y <- F2Hz
+# 
+#     # remove NA pairs
+#     keep <- is.finite(x) & is.finite(y)
+#     x <- x[keep]
+#     y <- y[keep]
+# 
+#     # remove duplicates in x
+#     d <- !duplicated(x)
+#     x <- x[d]
+#     y <- y[d]
+# 
+#     # safety check
+#     if(length(x) < 2) {
+#       return(tibble(seq = grid, F2Hz = NA_real_))
+#     }
+# 
+#     tibble(
+#       seq = grid,
+#       F2Hz = approx(x = x, y = y, xout = grid, rule = 2)$y
+#     )
+#   }) %>%
+#   ungroup()
+```
+Plot a few curves
+```{r}
+# plot a few curves
+
+subset_fileName <- df %>%
+  ungroup() %>% 
+  distinct(subj) %>%
+  slice_sample(n = 20)
+
+curvedf<- df %>% inner_join(subset_fileName, by = "subj")
+
+
+ggplot(data = df) + #or use df to plot all curves
+  aes(x = seq, y = F2Hz, group = subj, color = biteblock, linetype = auditoryfeedback) +
+  geom_line(linewidth = 0.8) +
+  scale_color_manual(values=Category.colors) +
+  scale_x_continuous(breaks = c(1, 54, 107, 161))+
+  labs(x = "trial number")+
+  #mytheme  +
+  #theme(legend.position = "bottom")
+  theme_light()
+
+```
+
+
+
+Compute FPCA
+```{r}
+# build a funData object (limiting it to only one of the vowels for simplicity)
+
+funF2 <- df %>% 
+  long2irregFunData(id = "subj", time = "seq", value = "F2Hz") %>% 
+    as.funData()
+
+# Compute FPCA
+fpcaF2 <- PACE(funF2)
+
+#df %>% filter(subj == "1")
+
+#proportion of explained variance
+fpcaF2$values / sum(fpcaF2$values)
+
+```
+
+
+Plot PC curves
+```{r}
+# scores st. dev.
+sdFun <- fpcaF2$values %>% sqrt()
+# PC curves to be plotted
+nPC <- 3
+PCcurves <- expand_grid(PC = 1:nPC,
+                        fractionOfStDev = seq(-1, 1, by=.25)) %>%
+  group_by(PC, fractionOfStDev) %>%
+  reframe(
+    funData2long1(fpcaF2$mu + fractionOfStDev * sdFun[PC] * fpcaF2$functions[PC],
+                  time = "seq", value = "F2Hz")
+  )
+# Plot
+ggplot(PCcurves) +
+  aes(x = seq, y = F2Hz, group = fractionOfStDev, color = fractionOfStDev) +
+  geom_line() +
+  scale_color_gradient2(low = "deeppink2", mid = "grey", high = "burlywood1",
+                        breaks = c(-1, 0 , 1)) +
+  facet_wrap(~ PC, nrow = 1,
+             labeller = labeller(PC = ~ str_glue("PC{.x}"))) +
+  labs(color = expression(frac(s[k], sigma[k]))) +
+  xlab("trials") +
+  geom_line(data = PCcurves %>% filter(fractionOfStDev == 0), color = 'black', linewidth = 1.2, linetype = "dashed") +
+  scale_x_continuous(breaks = c(54, 107, 161))+
+  #mytheme +
+  theme_minimal()+
+  theme(legend.position = "bottom")
+
+```
+
+Plot the mean curve
+```{r}
+# quick way (not ggplot)
+fpcaF2$mu %>% plot()
+# nicer way
+fpcaF2$mu %>% funData2long1(time = "seq", value = "F2") %>% ggplot() +
+  aes(x = seq, y = F2) +
+  scale_x_continuous(breaks = c(54, 107, 161))+
+  geom_line()
+```
+
+Plot PC1
+```{r}
+fpcaF2$functions[1] %>% funData2long1(time = "time", value = "y") %>% ggplot() +
+  aes(x = time, y = y) +
+  scale_x_continuous(breaks = c(54, 107, 161))+
+  geom_line()
+```
+
+Print the PC scores of the first few curves
+```{r}
+fpcaF2$scores %>% head()
+```
+
+Reconstruct the first curve (first row of scores matrix) up to the first two PC scores (first two columns of scores matrix). Compare to original curve.
+
+```{r}
+
+orig_curve <- funF2[2] %>% funData2long1(value = "F2Hz")
+rec_curve <- (fpcaF2$mu + fpcaF2$scores[2,1] * fpcaF2$functions[1]+
+                fpcaF2$scores[2,2] * fpcaF2$functions[2] 
+                ) %>% funData2long1(value = "F2Hz")
+# join the curves into one long format tibble and plot
+bind_rows(orig_curve %>% mutate(curve = "original"),
+          rec_curve %>% mutate(curve = "reconstructed")) %>% 
+  ggplot(aes(time, F2Hz, color = curve)) +
+  scale_x_continuous(breaks = c(54, 107, 161))+
+  geom_line()
+  
+```
+
+Plot PC scores scatterplot
+```{r}
+PCscores <- fpcaF2$scores %>%
+  `colnames<-`( paste0("s", 1:fpcaF2$npc)) %>%
+  # above line means: colnames(fpcaF2$scores) <- paste0("s", 1:fpcaF2$npc) %>% 
+  as_tibble() %>%
+  bind_cols(df %>% distinct(subj, biteblock, gender, auditoryfeedback), .)
+
+
+# scatterplot PC scores s1 and s2 by BB
+ggplot(PCscores) +
+  aes(x = s1, y = s2, color = biteblock) +
+  geom_point() +
+  scale_color_manual(values=Category.colors) +
+  #mytheme +
+  #theme(legend.position = "right")
+  theme_minimal()
+
+
+# scatterplot PC scores s1 and s2 by AF
+ggplot(PCscores) +
+  aes(x = s1, y = s2, shape = biteblock, color = auditoryfeedback) +
+  geom_point() +
+  scale_color_manual(values= afcolors) +
+  #mytheme +
+  #theme(legend.position = "right")
+  theme_minimal()
+
+af <- Category.colors[as.numeric(PCscores$auditoryfeedback)]
+bb <- c(16, 17)
+bb <- bb[as.numeric(PCscores$biteblock)]
+scatterplot3d(PCscores$s1, PCscores$s2, PCscores$s3, pch = bb, color = af, angle = 55)
+
+
+
+s3plot <- plot_ly(
+  PCscores, x = ~s1, y = ~s2, z = ~s3, 
+  color = ~auditoryfeedback, colors = afcolors
+  #color = ~biteblock, colors = Category.colors
+  ) %>%
+  add_markers() %>%
+  layout(
+    scene = list(xaxis = list(title = 'PC1 score'),
+        yaxis = list(title = 'PC2 score'),
+        zaxis = list(title = 'PC3 score'))
+        )
+
+saveWidget(s3plot, file = "3dplot.html")
+```
+
+Pick two random curves from the dataset, call them  `curve1` and `curve2`. Plot the curves. Then mark the corresponding points on the scatterplot.
+```{r}
+id1 <- 4
+id2 <- 35
+curve1 <- df %>% filter(subj==id1)
+curve2 <- df %>% filter(subj==id2)
+ggplot(mapping = aes(seq, F2Hz)) +
+  geom_line(data = curve1, color = "magenta") +
+  geom_line(data = curve2, color = "chartreuse") 
+
+ggplot(PCscores) +
+  aes(x = s1, y = s2) +
+  geom_point() +
+  geom_point(data = PCscores %>% filter(subj==id1), color = "magenta", size = 3, shape = 18) +
+  geom_point(data = PCscores %>% filter(subj==id2), color = "chartreuse", size = 3, shape = 18) +
+  #mytheme +
+  theme(legend.position = "right")
+```
+
+Construct a new curve based on  `curve1` and `curve2`, call it `curveX`. The new curve is obtained by averaging the PC scores of  `curve1` and `curve2`. Consider the first two PC scores. Plot `curveX`'s PC scores on the scatterplot. Plot `curveX` together with  `curve1` and `curve2`.
+```{r}
+scoresX <- PCscores %>% filter(subj %in% c(id1, id2)) %>% summarise(across(c(s1, s2), mean))
+ggplot(PCscores) +
+  aes(x = s1, y = s2) +
+  geom_point() +
+  geom_point(data = PCscores %>% filter(subj==id1), color = "magenta", size = 3, shape = 18) +
+  geom_point(data = PCscores %>% filter(subj==id2), color = "chartreuse", size = 3, shape = 18) +
+  geom_point(data = scoresX, color = "blue", size = 3, shape = 18) +
+  geom_segment(x = PCscores %>% filter(subj==id1) %>% pull(s1),
+               xend = PCscores %>% filter(subj==id2) %>% pull(s1),
+               y = PCscores %>% filter(subj==id1) %>% pull(s2),
+               yend = PCscores %>% filter(subj==id2) %>% pull(s2),
+               linetype = "dashed") +
+  #mytheme +
+  theme(legend.position = "right")
+
+curveX <- (
+  fpcaF2$mu + (scoresX %>% pull(s1)) * fpcaF2$functions[1] +
+    (scoresX %>% pull(s2)) * fpcaF2$functions[2]
+) %>% funData2long1(time = "seq", value = "F2Hz")
+ggplot(mapping = aes(seq, F2Hz)) +
+  geom_line(data = curve1, color = "magenta") +
+  geom_line(data = curve2, color = "chartreuse") +
+  geom_line(data = curveX, color = "blue")+
+  scale_x_continuous(breaks = c(1,54, 107, 161))
+```
+
+Reconstruct the first curve (first row of scores matrix) up to the first two PC scores (first two columns of scores matrix). Compare to original curve.
+```{r}
+orig_curve <- funF2[1] %>% funData2long1(time = "seq",value = "F2Hz")
+rec_curve <- (fpcaF2$mu + fpcaF2$scores[1,1] * fpcaF2$functions[1] + 
+                fpcaF2$scores[1,2] * fpcaF2$functions[2]) %>% funData2long1(time = "seq", value = "F2Hz")
+# join the curves into one long format tibble and plot
+bind_rows(orig_curve %>% mutate(curve = "original"),
+          rec_curve %>% mutate(curve = "reconstructed")) %>% 
+  ggplot(aes(seq, F2Hz, color = curve)) +
+  scale_x_continuous(breaks = c(54, 107, 161))+
+  geom_line()
+```
+
+
+Fit a regression model on s1
+```{r}
+#model for s1
+s1mod <- lm (s1 ~ biteblock, data = PCscores)
+emmeans(s1mod, pairwise ~biteblock)
+
+#reconstruct predicted curves
+emm <- emmeans (s1mod, pairwise ~ biteblock) $emmeans %>% 
+  as_tibble() %>% 
+  #select(biteblock, emmean) %>% 
+  rename(s1 = emmean)
+
+predCurvess1 <- emm %>% 
+  group_by(biteblock) %>% 
+  reframe(funData2long1(fpcaF2$mu + s1 * fpcaF2$functions[1])) %>% 
+  rename(seq = time, F2 = value)
+
+ggplot(predCurvess1) + 
+  aes(seq, F2, color = biteblock)+
+  geom_line()+
+  labs(x = "trial number")+
+  scale_color_manual(values = Category.colors) + 
+  scale_x_continuous(breaks = c(54, 107, 161))+
+  #mytheme +
+  theme_light()
+```
+
+linear model on PC scores
+```{r}
+s1lm <- lm(s2 ~  biteblock * AF + gender, data = PCscores)
+summary(s1lm)
+```
+
+
+Plot the mean curve, then add one SD of s1 to it, on top of it, substract an SD of S1, to see what the first PC does
+```{r}
+#the mean curve
+meancurve<- fpcaF2$mu %>% funData2long1(time = "seq", value = "F2") #%>% ggplot() +
+  #aes(x = seq, y = F2) +
+  #scale_x_continuous(breaks = c(54, 107, 161))+
+  #geom_line()
+
+#the mean curve with 1sd of s1 added
+#plus1sdcurve <- fpcaF2$mu %>%funData2long1(time = "seq", value = "F2") %>% 
+  #mutate(F2 = F2 + sd(PCscores$s1))#%>% ggplot() +
+  #aes(x = seq, y = F2) +
+  #scale_x_continuous(breaks = c(54, 107, 161))+
+  #geom_line()
+
+
+sd1 <- fpcaF2$mu + 1*sd(PCscores$s1)*fpcaF2$functions[1]
+
+plus1sdcurve <- sd1%>% funData2long1(time = "seq", value = "F2") 
+
+sd_1 <- fpcaF2$mu - 1*sd(PCscores$s1)*fpcaF2$functions[1]
+
+minus1sdcurve <- sd_1%>% funData2long1(time = "seq", value = "F2") 
+
+# join the curves into one long format tibble and plot
+bind_rows(meancurve %>% mutate(curve = "mean"),
+          plus1sdcurve %>% mutate(curve = "+1sd"),
+          minus1sdcurve %>% mutate(curve = "-1sd")) %>% 
+  ggplot(aes(seq, F2, color = curve)) +
+  scale_x_continuous(breaks = c(54, 107, 161))+
+  geom_line()
+
+#maybe it shouldn't be the mean curve? Check Gubian
+```
+
+
+

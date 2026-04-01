@@ -1,0 +1,208 @@
+---
+title: "converting to funData"
+author: "Xinyu Zhang"
+date: "2026-03-04"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Libraries and data
+```{r}
+library(fda)
+library(funData)
+library(MFPCA)
+library(tidyverse)
+library(landmarkregUtils)
+library(emmeans)
+library(lme4)
+
+Category.colors <- c(NB = "darkslategray", BB = "orangered")
+```
+
+(skipping the curve plotting for now)
+
+Compute FPCA
+```{r}
+# build a funData object (limiting it to only one of the vowels for simplicity)
+
+df <-  read.csv("productionFullTable.csv") %>% 
+  mutate(
+    seq = case_when(
+      block =="1" ~ seq + 1,
+      block == "2" ~ seq +54,
+      block == "4" ~ seq +107
+  )
+  )
+
+
+df %>%
+  filter(Label == "I") %>%
+  count(subj, seq, Label) %>%
+  filter(n > 0)
+
+df <- df %>%
+  #filter(Label == "I", block =="2") %>%
+  filter(Label == "I") %>% #all blocks
+  distinct(subj, seq, .keep_all = TRUE)
+
+
+funF2 <- df %>% 
+  long2irregFunData(id = "subj", time = "seq", value = "F2Hz") %>% 
+    as.funData()
+
+# Compute FPCA
+fpcaF2 <- PACE(funF2, npc = 4)
+
+#df %>% filter(subj == "1")
+
+#proportion of explained variance
+fpcaF2$values / sum(fpcaF2$values)
+
+```
+
+Plot PC curves
+```{r}
+# scores st. dev.
+sdFun <- fpcaF2$values %>% sqrt()
+# PC curves to be plotted
+nPC <- 4
+PCcurves <- expand_grid(PC = 1:nPC,
+                        fractionOfStDev = seq(-1, 1, by=.25)) %>%
+  group_by(PC, fractionOfStDev) %>%
+  reframe(
+    funData2long1(fpcaF2$mu + fractionOfStDev * sdFun[PC] * fpcaF2$functions[PC],
+                  time = "seq", value = "F2Hz")
+  )
+# Plot
+ggplot(PCcurves) +
+  aes(x = seq, y = F2Hz, group = fractionOfStDev, color = fractionOfStDev) +
+  geom_line() +
+  scale_color_gradient2(low = "blue", mid = "grey", high = "orangered",
+                        breaks = c(-1, 0 , 1)) +
+  facet_wrap(~ PC, nrow = 1,
+             labeller = labeller(PC = ~ str_glue("PC{.x}"))) +
+  labs(color = expression(frac(s[k], sigma[k]))) +
+  xlab("trials") +
+  geom_line(data = PCcurves %>% filter(fractionOfStDev == 0), color = 'black', linewidth = 1.2) +
+  scale_x_continuous(breaks = c(54, 107, 161))+
+  mytheme +
+  theme(legend.position = "bottom")
+
+```
+
+Plot the mean curve
+```{r}
+# quick way (not ggplot)
+fpcaF2$mu %>% plot()
+# nicer way
+fpcaF2$mu %>% funData2long1(time = "seq", value = "F2") %>% ggplot() +
+  aes(x = seq, y = F2) +
+  scale_x_continuous(breaks = c(54, 107, 161))+
+  geom_line()
+```
+
+
+
+
+Plot PC1
+```{r}
+fpcaF2$functions[1] %>% funData2long1(time = "time", value = "y") %>% ggplot() +
+  aes(x = time, y = y) +
+  scale_x_continuous(breaks = c(54, 107, 161))+
+  geom_line()
+```
+
+collect PC scores
+```{r}
+PCscores <- fpcaF2$scores %>%
+  `colnames<-`( paste0("s", 1:fpcaF2$npc)) %>%
+  # above line means: colnames(fpcaF2$scores) <- paste0("s", 1:fpcaF2$npc) %>% 
+  as_tibble() %>%
+  bind_cols(df %>% distinct(subj, BB, gender, AF, Label), .)
+
+
+# scatterplot PC scores s1 and s2 by Category
+ggplot(PCscores) +
+  aes(x = s1, y = s2, color = BB) +
+  geom_point() +
+  scale_color_manual(values=Category.colors) +
+  mytheme +
+  theme(legend.position = "right")
+```
+
+Reconstruct the first curve (first row of scores matrix) up to the first two PC scores (first two columns of scores matrix). Compare to original curve.
+
+```{r}
+
+orig_curve <- funF2[2] %>% funData2long1(value = "F2Hz")
+rec_curve <- (fpcaF2$mu + fpcaF2$scores[2,1] * fpcaF2$functions[1]+
+                fpcaF2$scores[2,2] * fpcaF2$functions[2] 
+                ) %>% funData2long1(value = "F2Hz")
+# join the curves into one long format tibble and plot
+bind_rows(orig_curve %>% mutate(curve = "original"),
+          rec_curve %>% mutate(curve = "reconstructed")) %>% 
+  ggplot(aes(time, F2Hz, color = curve)) +
+  scale_x_continuous(breaks = c(54, 107, 161))+
+  geom_line()
+  
+```
+
+Fit a regression model on s1
+```{r}
+#model for s1
+s1mod <- lm (s1 ~ BB, data = PCscores)
+emmeans(s1mod, pairwise ~BB)
+
+#reconstruct predicted curves
+emm <- emmeans (s1mod, pairwise ~ BB) $emmeans %>% 
+  as_tibble() %>% 
+  select(BB, emmean) %>% 
+  rename(s1 = emmean)
+
+predCurvess1 <- emm %>% 
+  group_by(BB) %>% 
+  reframe(funData2long1(fpcaF2$mu + s1 * fpcaF2$functions[1])) %>% 
+  rename(F2 = value)
+
+ggplot(predCurvess1) + 
+  aes(time, F2, color = BB)+
+  geom_line()+
+  scale_color_manual(values = Category.colors) + 
+  scale_x_continuous(breaks = c(54, 107, 161))+
+  mytheme +
+  theme(legend.position = "bottom")
+```
+
+```{r}
+#model for s2
+s2mod <- lm (s2 ~ BB, data = PCscores)
+emmeans(s2mod, pairwise ~BB)
+
+#reconstruct predicted curves
+emm <- emmeans (s2mod, pairwise ~ BB) $emmeans %>% 
+  as_tibble() %>% 
+  select(BB, emmean) %>% 
+  rename(s2 = emmean)
+
+predCurvess2 <- emm %>% 
+  group_by(BB) %>% 
+  reframe(funData2long1(fpcaF2$mu + s2 * fpcaF2$functions[2])) %>% 
+  rename(F2 = value)
+
+ggplot(predCurvess2) + 
+  aes(time, F2, color = BB)+
+  geom_line()+
+  scale_color_manual(values = Category.colors) + 
+  mytheme +
+  theme(legend.position = "bottom")
+```
+
+linear model on PC scores
+```{r}
+s1lm <- lm(s1 ~  BB * AF + gender, data = PCscores)
+summary(s1lm)
+```
+
