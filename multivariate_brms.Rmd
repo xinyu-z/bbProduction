@@ -457,7 +457,7 @@ summary(fitSeqnb4)
 ```{r}
 #adding slope of label
 
-multSl <- bf(mvbind(F1Hz, F2Hz) ~ block * BB * AF* Label + gender + (1|subj|Label) + (1|q|word)) + set_rescor(TRUE)
+multSl <- bf(mvbind(F1Hz, F2Hz) ~ block * BB * AF* Label* gender + (1|subj|Label) + (1|q|word)) + set_rescor(TRUE)
 
 # "|p|" in between indicates that all varying effects of `subj` should be modeled as correlated (F1&F2 intercept per subject). Same with "|q|".
 

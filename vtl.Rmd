@@ -1,0 +1,265 @@
+---
+title: "analysis with VTL"
+output: html_notebook
+---
+
+preprocessing:
+
+Measurements from genders and phonemes
+```{r echo=TRUE}
+library(dplyr)
+fi<- read.csv("F1-F4FemaleI.csv", header = TRUE, sep = "\t")
+fig<- fi |> mutate(gender = c(rep("F", times = nrow(fi))))
+  
+fe <- read.csv("F1-F4FemaleE.csv", header = TRUE, sep = "\t")
+feg<- fe |> mutate(gender = c(rep("F", times = nrow(fe))))
+
+mi<- read.csv("F1-F4MaleI.csv", header = TRUE, sep = "\t")
+  mig<- mi |> mutate(gender = c(rep("M", times = nrow(mi))))
+
+me <- read.csv("F1-F4MaleE.csv", header = TRUE, sep = "\t")
+meg<- me |> mutate(gender = c(rep("M", times = nrow(me))))
+
+mfie<- rbind(fig, feg, mig, meg)
+
+#extract the fileName column
+#fileNames<- rcds |> select(fileName)
+#head(fileNames)
+```
+
+### splitting the different segments in the file name into columns because they provide info about the recording
+
+```{r}
+prod <- read.table(text = as.character(mfie$fileName), sep = "_")
+head(prod)
+
+### removing the ".wav" from the final column
+#```{r}
+#library(stringr)
+#library(dplyr)
+#prod <- prod %>% 
+#  mutate(V5 =
+#   str_sub(prod$V5, end=-5)
+#  )
+#head(prod)
+```
+
+
+### renaming the column names accordingly
+```{r}
+#removing column 1 because it's just "subj"
+newcols <- prod %>% 
+  select(-V1)
+colnames(newcols)
+
+#revert the "Post" and the "seq" for posttest items 
+#if v5 = post, v5 = v4, v4 = v5
+correctPost <- newcols |> 
+  mutate(V51 = ifelse(V5 == "Post", V4, V5),
+         V4 = ifelse(V5 == "Post", V5, V4)) |> 
+  select(-V5) |> 
+  rename("V5" = "V51")
+
+head(correctPost)
+
+#rename new columns accordingly
+nc<- correctPost %>% 
+  rename("subj" = "V2",
+         "word" = "V3",
+         "block" = "V4",
+         "seq" = "V5")
+
+head(nc)
+
+
+allcol<- as.data.frame(cbind(mfie$fileName, nc))|> rename("fileName"="mfie$fileName")
+colnames(allcol)
+
+df <- full_join(allcol, mfie, by = "fileName") |> rename("F0Hz" = "F0.Hz.", "F1Hz" = "F1.Hz.", "F2Hz" = "F2.Hz.", "F3Hz" = "F3.Hz.", "F4Hz" = "F4.Hz.", "F1Bark" = "F1.Bark.", "F2Bark" = "F2.Bark.","F3Bark" = "F3.Bark.", "F4Bark" = "F4.Bark." )
+
+#add column about BB condition
+
+d <- df |> 
+   mutate(
+    BB = case_when(
+      subj == "2" ~ "BB",
+      subj == "4" ~ "BB",
+      subj == "5" ~ "BB",
+      subj == "9" ~ "BB",
+      subj == "10" ~ "BB",
+      subj == "12" ~ "BB",
+      subj == "13" ~ "BB",
+      subj == "14" ~ "BB",
+      subj == "15" ~ "BB",
+      subj == "16" ~ "BB",
+      subj == "17" ~ "BB",
+      subj == "19" ~ "BB",
+      subj == "22" ~ "BB",
+      subj == "25" ~ "BB",
+      subj == "28" ~ "BB",
+      subj == "32" ~ "BB",
+      subj == "33" ~ "BB",
+      subj == "34" ~ "BB",
+      subj == "37" ~ "BB",
+      subj == "39" ~ "BB",
+      subj == "41" ~ "BB",
+      subj == "42" ~ "BB",
+      subj == "44" ~ "BB",
+      subj == "45" ~ "BB",
+      subj == "48" ~ "BB",
+      subj == "52" ~ "BB",
+      subj == "53" ~ "BB",
+      subj == "55" ~ "BB",
+      subj == "58" ~ "BB",
+      subj == "59" ~ "BB",
+      subj == "60" ~ "BB",
+      TRUE ~ "NB")
+   )
+
+# coding in the block names correctly
+
+#E.g., if the participant went through the sequence of AF -> MN, then assign AF1, MN2 to the AF and MN blocks; if the participant went through the sequence of MN -> AF, then assign MN1, AF2 to the AF and MN blocks. Also coding in the bite block condition, since ultimately the analysis is comparing four groups.
+
+mn2subj <- c("2", "3", "5", "6", "8", "9", "10", "12", "15", "17", "19", "26", "30", "31", "33", "35", "38", "40", "42", "43", "46", "48", "50", "51", "52", "53", "54", "56", "58", "60")
+
+db <-  d |> 
+  mutate(
+    block = case_when(
+      subj %in% mn2subj & block == "MN1" ~ "MN2",
+      subj %in% mn2subj & block == "AF2" ~ "AF1",
+      subj %in% mn2subj & block == "Pre" ~ "Pre",
+      subj %in% mn2subj & block == "Post" ~ "Post",
+      !(subj %in% mn2subj) & block == "MN1" ~ "MN1",
+      !(subj %in% mn2subj) & block == "AF2" ~ "AF2",
+      !(subj %in% mn2subj) & block == "Pre" ~ "Pre",
+      !(subj %in% mn2subj) & block == "Post" ~ "Post"
+    )
+    )
+
+af1subj <- c("2", "3", "5", "6", "8", "9", "10", "12", "15", "17", "19", "26", "30", "31", "33", "35", "38", "40", "42", "43", "46", "48", "50", "51", "52", "53", "54", "56", "58", "60")
+
+df <- db |> filter(block == "Pre" | block == "AF1" | block == "MN1" | block == "Post") |> 
+  mutate(
+    AF = case_when(
+      subj %in% af1subj ~ "AF",
+      TRUE ~ "MN")) |> mutate(
+     block = case_when(
+      block == "AF1" ~ "2",
+      block == "MN1" ~ "2",
+      block == "Pre" ~ "1",
+      block == "Post" ~ "4")
+   )
+
+write.csv(df, "f1-4.csv")
+```
+
+```{r}
+df <-read.csv("f1-4.csv", header = TRUE, sep = ",")
+head(df)
+```
+
+the for loop
+```{r}
+library(soundgen)
+library(stringr)
+library(reshape2)
+library(dplyr)
+
+calculateVTL <- function(n){
+  f1 = as.vector(df |> filter(subj == n) |> 
+                                   select(F1Hz))
+  f2 = as.vector(df |> filter(subj == n) |> 
+                                   select(F2Hz))
+  f3 = as.vector(df |> filter(subj == n) |> 
+                                   select(F3Hz))
+  f4 = as.vector(df |> filter(subj == n) |> 
+                                   select(F4Hz))
+  vtl = estimateVTL(
+    formants = list(f1 = f1,
+                    f2 = f2,
+                    f3 = f3,
+                    f4 = f4
+                    ), plot = FALSE, output = "simple"
+  )
+  
+  x <- c(n)
+  y <- c(vtl)
+ 
+  x_name <- "subj"
+  y_name <- "VTL"
+  #vtable < - data.frame(x, y)
+  #names(vtable) <- c(x_name, y_name)
+  #print(vtable)
+  #vtable <- melt(data.frame(x,y), id.vars = x)
+  #colnames(vtable) <- c(x_name, y_name)
+  vtable <- as.data.frame(cbind(x,y))
+  vtable <- print(vtable)
+  vtable
+}
+
+vtable <-calculateVTL(1)
+
+for (sub in c(10, 11, 14, 15, 17, 18, 19,  1, 20, 21, 22, 23, 26, 27, 28, 30, 31, 32, 34, 35, 36, 37, 38, 41, 42, 44, 45, 46, 47,48, 49,  4, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59,  5,  7,  9, 12, 13, 29,  2, 33,  3, 40, 43, 60)){
+  calculated_n <- calculateVTL(sub)
+  vtable <- rbind(vtable, calculated_n)
+}
+
+vtable <- vtable |> rename("subj" = "x", "VTL" = "y")
+
+write.csv(vtable, "vtable.csv")
+```
+
+* distinct subject numbers (filtering out the subjects that were not selected in the end)
+```{r}
+as.vector(distinct(df, subj))
+head(vtable)
+```
+inner join two tables
+```{r}
+vtable$subj <- as.integer(vtable$subj)
+
+d <- df |> left_join(vtable, by= "subj") 
+head(d)
+```
+
+new regression model
+```{r}
+df<- d
+#change variables into correct data types
+df$BB <- as.factor(df$BB)
+df$Label <- as.factor(df$Label)
+df$block <- as.factor(df$block)
+df$gender <- as.factor(df$gender)
+df$AF <- as.factor(df$AF)
+df$subj <- as.character(df$subj)
+df$seq <- as.numeric(df$seq)
+df$F0Hz <- as.numeric(df$F0Hz)
+df$F1Hz <- as.numeric(df$F1Hz)
+df$F2Hz <- as.numeric(df$F2Hz)
+df$F1Bark <- as.numeric(df$F1Bark)
+df$F2Bark <- as.numeric(df$F2Bark)
+
+#coding the reference level for contrasts
+df$BB <- relevel(df$BB, ref = "NB") #non-bite-block group as reference 
+
+df$AF <- relevel(df$AF, ref = "AF") #regular auditory feedback group as reference
+
+#df$Label <- relevel(df$Label, ref = "E") #vowel /E/ as reference because it is less affected by the bite block
+
+df$block <- relevel(df$block, ref = "1") #block 1 as reference because it's the pretest
+
+gender.contrast <- cbind (c (-0.5, +0.5)) # female = -0.5, male = +0.5 
+colnames (gender.contrast) <- c ("-F+M")
+contrasts (df$gender) <- gender.contrast #it makes more sense to have the grand mean as reference level than having either gender. See the other html file for comparison
+
+#same for vowel contrast, changing it to sum coding.
+vowel.contrast <- cbind (c (-0.5, +0.5)) # E = -0.5, I = +0.5 
+colnames (vowel.contrast) <- c ("-E+I")
+contrasts (df$Label) <- vowel.contrast
+
+library(brms)
+vtlmodel <- bf(mvbind(F1Hz, F2Hz) ~ block * BB * AF* Label* VTL + (1|subj|Label) + (1|q|word)) + set_rescor(TRUE)
+fitvtl <- brm(vtlmodel, data = df, chains = 2, cores = 2, seed = 2026) #setting seed for reproducibility
+summary(fitvtl)
+```
+
