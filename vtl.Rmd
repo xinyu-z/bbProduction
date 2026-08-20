@@ -150,7 +150,7 @@ df <- db |> filter(block == "Pre" | block == "AF1" | block == "MN1" | block == "
       block == "Post" ~ "4")
    )
 
-write.csv(df, "f1-4.csv")
+#write.csv(df, "f1-4.csv")
 ```
 
 ```{r}
@@ -166,13 +166,13 @@ library(reshape2)
 library(dplyr)
 
 calculateVTL <- function(n){
-  f1 = as.vector(df |> filter(subj == n) |> 
+  f1 = as.vector(df |> filter(subj == n, block == 1) |> 
                                    select(F1Hz))
-  f2 = as.vector(df |> filter(subj == n) |> 
+  f2 = as.vector(df |> filter(subj == n, block == 1) |> 
                                    select(F2Hz))
-  f3 = as.vector(df |> filter(subj == n) |> 
+  f3 = as.vector(df |> filter(subj == n, block == 1) |> 
                                    select(F3Hz))
-  f4 = as.vector(df |> filter(subj == n) |> 
+  f4 = as.vector(df |> filter(subj == n, block == 1) |> 
                                    select(F4Hz))
   vtl = estimateVTL(
     formants = list(f1 = f1,
@@ -192,33 +192,35 @@ calculateVTL <- function(n){
   #print(vtable)
   #vtable <- melt(data.frame(x,y), id.vars = x)
   #colnames(vtable) <- c(x_name, y_name)
-  vtable <- as.data.frame(cbind(x,y))
-  vtable <- print(vtable)
-  vtable
+  vtable2 <- as.data.frame(cbind(x,y))
+  vtable2 <- print(vtable2)
+  vtable2
 }
 
-vtable <-calculateVTL(1)
+vtable2 <-calculateVTL(1)
 
 for (sub in c(10, 11, 14, 15, 17, 18, 19,  1, 20, 21, 22, 23, 26, 27, 28, 30, 31, 32, 34, 35, 36, 37, 38, 41, 42, 44, 45, 46, 47,48, 49,  4, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59,  5,  7,  9, 12, 13, 29,  2, 33,  3, 40, 43, 60)){
   calculated_n <- calculateVTL(sub)
-  vtable <- rbind(vtable, calculated_n)
+  vtable2 <- rbind(vtable2, calculated_n)
 }
 
-vtable <- vtable |> rename("subj" = "x", "VTL" = "y")
+vtable2 <- vtable2 |> rename("subj" = "x", "VTL" = "y")
 
-write.csv(vtable, "vtable.csv")
+write.csv(vtable2, "vtable2.csv")
 ```
 
 * distinct subject numbers (filtering out the subjects that were not selected in the end)
 ```{r}
 as.vector(distinct(df, subj))
-head(vtable)
+head(vtable2)
 ```
 inner join two tables
 ```{r}
-vtable$subj <- as.integer(vtable$subj)
+vtable2 <-read.csv("vtable2.csv", header = TRUE, sep = ",")
 
-d <- df |> left_join(vtable, by= "subj") 
+vtable2$subj <- as.integer(vtable2$subj)
+
+d <- df |> left_join(vtable2, by= "subj") 
 head(d)
 ```
 
@@ -258,8 +260,8 @@ colnames (vowel.contrast) <- c ("-E+I")
 contrasts (df$Label) <- vowel.contrast
 
 library(brms)
-vtlmodel <- bf(mvbind(F1Hz, F2Hz) ~ block * BB * AF* Label* VTL + (1|subj|Label) + (1|q|word)) + set_rescor(TRUE)
-fitvtl <- brm(vtlmodel, data = df, chains = 2, cores = 2, seed = 2026) #setting seed for reproducibility
+vtlmodel <- bf(mvbind(F1Hz, F2Hz) ~ block * BB * AF* Label* VTL + (1+ Label|p|subj) + (1|q|word)) + set_rescor(TRUE)
+fitvtl <- brm(vtlmodel, data = df, chains = 2, cores = 2, seed = 1852, control = list(max_treedepth = 15)) #setting seed for reproducibility
 summary(fitvtl)
 ```
 
