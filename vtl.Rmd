@@ -150,7 +150,7 @@ df <- db |> filter(block == "Pre" | block == "AF1" | block == "MN1" | block == "
       block == "Post" ~ "4")
    )
 
-#write.csv(df, "f1-4.csv")
+write.csv(df, "f1-4.csv")
 ```
 
 ```{r}
@@ -264,4 +264,16 @@ vtlmodel <- bf(mvbind(F1Hz, F2Hz) ~ block * BB * AF* Label* VTL + (1+ Label|p|su
 fitvtl <- brm(vtlmodel, data = df, chains = 2, cores = 2, seed = 1852, control = list(max_treedepth = 15)) #setting seed for reproducibility
 summary(fitvtl)
 ```
+
+trial effect including VTL as a variable into the model
+```{r}
+nb2<- df %>% filter(block == "2" , BB == "NB")
+
+seqnb2 <- bf(mvbind(F1Hz, F2Hz) ~  AF * Label * seq * gender + (1|p|subj) + (1|q|word)) + set_rescor(TRUE)
+
+
+fitSeqnb2 <- brm(seqnb2, data = nb2, chains = 2, cores = 2, seed = 1838, control = list(adapt_delta = 0.90)) #setting seed for reproducibility
+summary(fitSeqnb2)
+```
+also add a "+ gender" version later
 
