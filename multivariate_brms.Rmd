@@ -96,30 +96,28 @@ mean(dfEf$F2Hz)
 ```
 
 ```{r}
-#library(brms)
+library(brms)
 
-mult1 <- bf(mvbind(F1Hz, F2Hz) ~ block * BB * AF* Label + gender + (1+ Label|p|subj) + (1|q|word)) + set_rescor(TRUE)
+#mult1 <- bf(mvbind(F1Hz, F2Hz) ~ block * BB * AF* Label + gender + (1+ Label|p|subj) + (1|q|word)) + set_rescor(TRUE)
 
 # "|p|" in between indicates that all varying effects of `subj` should be modeled as correlated (F1&F2 intercept per subject). Same with "|q|".
 
 # "set_rescor=(TRUE)" indicates that the errors of F1 and F2 estimates are to be modeled as correlated
 
-fit1 <- brm(mult1, data = df, chains = 2, cores = 2, seed = 206) #setting seed for reproducibility
-```
+#fit1 <- brm(mult1, data = df, chains = 2, cores = 2, seed = 206) #setting seed for reproducibility
+#summary(fit1)
 
-
-# summarizing the results
-
-```{r}
-#fit1 <- add_criterion(fit1, "loo")
-summary(fit1)
+#with slopes for all within participant variables (helpfully pointed out by Paul)
+mult2 <- bf(mvbind(F1Hz, F2Hz) ~ block * BB * AF* Label + gender + (1+ Label + block |p|subj) + (1|q|word)) + set_rescor(TRUE)
+fit2 <- brm(mult2, data = df, chains = 2, cores = 2, seed = 1731) #setting seed for reproducibility
+summary(fit2)
 ```
 
 ## generating a LateX table of the coefficients
 ```{r}
 library(kableExtra)
-fixef(fit1)
-kable(data.frame(fixef(fit1)), digits = 2, "latex")
+fixef(fit2)
+kable(data.frame(fixef(fit2)), digits = 2, "latex")
 #the results will only show up in the console, so run this line in the console, and change the column names as needed
 ```
 
@@ -291,7 +289,7 @@ pp_check(fit5, resp = "F2Hz")
 ```{r}
 library(brms)
 
-multERB <- bf(mvbind(F1erb, F2erb) ~ block * BB * AF* Label + gender + (1 + Label|p|subj) + (1|q|word)) + set_rescor(TRUE)
+multERB <- bf(mvbind(F1erb, F2erb) ~ block * BB * AF* Label + gender + (1 + Label+ block|p|subj) + (1|q|word)) + set_rescor(TRUE)
 
 # "|p|" in between indicates that all varying effects of `subj` should be modeled as correlated (F1&F2 intercept per subject). Same with "|q|".
 
@@ -324,11 +322,54 @@ kable(data.frame(fixef(fitSeqbb2c)), digits = 2, "latex")
 
 ```
 
+
+## (block 2) with the correct variables (not arbitrarily leaving out interactions), and including BB as a variable
+```{r}
+during <- df %>% filter(block == "2" )
+seqb2 <- bf(mvbind(F1Hz, F2Hz) ~ seq * BB * AF* Label + gender + (1+ Label |p|subj) + (1|q|word)) + set_rescor(TRUE)
+fitseqb2 <- brm(seqb2, data = during, chains = 2, cores = 2, seed = 1806) #setting seed for reproducibility
+summary(fitseqb2)
+#in console
+kable(data.frame(fixef(fitseqb2)), digits = 2, "latex")
+```
+
+
+
+## (block 2) with the correct variables (not arbitrarily leaving out interactions), and including BB as a variable, on ERB data
+```{r}
+during <- df %>% filter(block == "2" )
+seqb2erb <- bf(mvbind(F1erb, F2erb) ~ seq * BB * AF* Label + gender + (1+ Label |p|subj) + (1|q|word)) + set_rescor(TRUE)
+fitseqb2erb <- brm(seqb2erb, data = during, chains = 2, cores = 2, seed = 1655) #setting seed for reproducibility
+summary(fitseqb2erb)
+#in console
+kable(data.frame(fixef(fitseqb2erb)), digits = 2, "latex")
+```
+
+
+## (post test) with the correct variables (not arbitrarily leaving out interactions), and including BB as a variable
+```{r}
+post <- df %>% filter(block == "4" )
+seqb4 <- bf(mvbind(F1Hz, F2Hz) ~ seq * BB * AF* Label + gender + (1+ Label|p|subj) + (1|q|word)) + set_rescor(TRUE)
+fitseqb4 <- brm(seqb4, data = post, chains = 2, cores = 2, seed = 1807) #setting seed for reproducibility
+summary(fitseqb4)
+#in console
+kable(data.frame(fixef(fitseqb4)), digits = 2, "latex")
+```
+
+
+## (post test) with the correct variables (not arbitrarily leaving out interactions), and including BB as a variable, with ERB data
+```{r}
+post <- df %>% filter(block == "4" )
+seqb4erb <- bf(mvbind(F1erb, F2erb) ~ seq * BB * AF* Label + gender + (1+ Label|p|subj) + (1|q|word)) + set_rescor(TRUE)
+fitseqb4erb <- brm(seqb4erb, data = post, chains = 2, cores = 2, seed = 1731) #setting seed for reproducibility
+summary(fitseqb4erb)
+```
+
 ```{r}
 #control group
 #subset to block 2, Esther's suggestion to cross AF and Seq, and Seq*Label, but not AF * Label 
 
-nb2<- df %>% filter(block == "2" , BB == "NB")
+nb2<- df %>% filter(block == "2" , BB == "NB") 
 
 seqnb2c <- bf(mvbind(F1Hz, F2Hz) ~  (AF + Label) * seq + gender + (1 + Label|p|subj) + (1|q|word)) + set_rescor(TRUE)
 
@@ -377,6 +418,18 @@ kable(data.frame(fixef(fitSeqbb4p)), digits = 2, "latex")
 
 ```
 
+```{r}
+#subset to block 4, but keeping BB in the same model
+post<- df %>% filter(block == "4")
+
+seqpost <- bf(mvbind(F1Hz, F2Hz) ~  (AF + Label) * seq * BB + gender + (1 + Label|p|subj) + (1|q|word)) + set_rescor(TRUE)
+
+fitSeqpost <- brm(seqpost, data = post, chains = 2, cores = 2, seed = 0051) #setting seed for reproducibility
+summary(fitSeqpost)
+#kable(data.frame(fixef(fitSeqbb4p)), digits = 2, "latex")
+
+```
+
 
 ```{r}
 #control group
@@ -395,9 +448,11 @@ kable(data.frame(fixef(fitSeqnb4c)), digits = 2, "latex")
 
 plotting seq effect
 ```{r}
+library(ggplot2)
+library(ggeffects)
 datb4 <- predict_response(
-  fitSeqbb4p,
-  terms = c("seq", "Label"))
+  fitseqb4,
+  terms = c("seq", "Label", "BB"))
  b4 <- plot(datb4,connect_lines = TRUE, one_plot = TRUE) + ylab("Hz")+ggtitle("")
  
 #datnb4 <- predict_response(

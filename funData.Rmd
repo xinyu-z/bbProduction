@@ -1,0 +1,35 @@
+---
+title: "converting to funData"
+author: "Xinyu Zhang"
+date: "2026-03-04"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Libraries and data
+```{r}
+library(fda)
+library(funData)
+library(MFPCA)
+library(tidyverse)
+library(landmarkregUtils)
+
+df <-  read.csv("fullTable_continuousSeq.csv")
+```
+
+(skipping the curve plotting for now)
+
+Compute FPCA
+```{r}
+# build a funData object (limiting it to only one of the vowels for simplicity)
+funF2 <- df %>% filter(Label == "I") %>%  distinct(subj, seq, .keep_all = TRUE) %>%  
+  long2irregFunData( id = "fileName", time = "seq", value = "F2Hz") %>% 
+    as.funData()
+
+# Compute FPCA
+fpca <- PACE(funF2, npc = 2)
+
+```
