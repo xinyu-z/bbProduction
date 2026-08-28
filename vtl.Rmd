@@ -263,6 +263,7 @@ library(brms)
 vtlmodel <- bf(mvbind(F1Hz, F2Hz) ~ block * BB * AF* Label* VTL + (1+ Label|p|subj) + (1|q|word)) + set_rescor(TRUE)
 fitvtl <- brm(vtlmodel, data = df, chains = 2, cores = 2, seed = 1852, control = list(max_treedepth = 15)) #setting seed for reproducibility
 summary(fitvtl)
+<<<<<<< HEAD
 
 vtlmodelBark <- bf(mvbind(F1Bark, F2Bark) ~ block * BB * AF* Label* VTL + (1+ Label|p|subj) + (1|q|word)) + set_rescor(TRUE)
 fitvtlbk <- brm(vtlmodelBark, data = df, chains = 2, cores = 2, seed = 1852, control = list(max_treedepth = 15)) #setting seed for reproducibility
@@ -272,6 +273,8 @@ vtlmodellog <- bf(mvbind(log(F1Hz), log(F2Hz)) ~ block * BB * AF* Label* log(VTL
 fitvtllog <- brm(vtlmodellog, data = df, chains = 2, cores = 2, seed = 1205, control = list(max_treedepth = 17, adapt_delta = 0.99)) #setting seed for reproducibility
 summary(fitvtllog)
 
+=======
+>>>>>>> 9ac1ccbb5a08451ecb752bc2cdec72a8046dccee
 ```
 
 trial effect including VTL as a variable into the model
@@ -281,7 +284,11 @@ nb2<- df %>% filter(block == "2" , BB == "NB")
 seqnb2 <- bf(mvbind(F1Hz, F2Hz) ~  AF * Label * seq * gender + (1|p|subj) + (1|q|word)) + set_rescor(TRUE)
 
 
+<<<<<<< HEAD
 fitSeqnb2 <- brm(seqnb2, data = nb2, chains = 2, cores = 2, seed = 1838, control = list(adapt_delta = 0.99, max_treedepth = 12)) #setting seed for reproducibility
+=======
+fitSeqnb2 <- brm(seqnb2, data = nb2, chains = 2, cores = 2, seed = 1838, control = list(adapt_delta = 0.90)) #setting seed for reproducibility
+>>>>>>> 9ac1ccbb5a08451ecb752bc2cdec72a8046dccee
 summary(fitSeqnb2)
 ```
 also add a "+ gender" version later
