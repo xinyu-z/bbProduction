@@ -277,6 +277,7 @@ summary(fitvtl)
 #summary(fitvtllog)
 
 library(kableExtra)
+library (lme4)
 fixef(fitvtl)
 kable(data.frame(fixef(fitvtl)), digits = 2, "latex")
 
