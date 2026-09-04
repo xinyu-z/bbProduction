@@ -276,6 +276,10 @@ summary(fitvtl)
 #fitvtllog <- brm(vtlmodellog, data = df, chains = 2, cores = 2, seed = 1205, control = list(max_treedepth = 10, adapt_delta = 0.8)) #setting seed for reproducibility
 #summary(fitvtllog)
 
+library(kableExtra)
+fixef(fitvtl)
+kable(data.frame(fixef(fitvtl)), digits = 2, "latex")
+
 ```
 
 trial effect including VTL as a variable into the model
